@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/url"
@@ -89,7 +90,7 @@ func getMsgPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 			return err
 		}
 
-		msgs, err := seishub.GetMsgPages(url)
+		msgs, err := seishub.GetMsgPages(context.Background(), url)
 		if err != nil {
 			return err
 		}
@@ -120,7 +121,7 @@ func getListPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 			return err
 		}
 
-		pg, err := seishub.GetMsgNamesPage(url)
+		pg, err := seishub.GetMsgNamesPage(context.Background(), url)
 		if err != nil {
 			return err
 		}

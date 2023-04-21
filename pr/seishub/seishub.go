@@ -1,6 +1,7 @@
 package seishub
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -13,9 +14,11 @@ import (
 	"time"
 )
 
-func ExtractMessages(url string) ([]*seismo.Message, error) {
+var client = http.Client{Timeout: 60 * time.Second}
 
-	namesPage, err := GetMsgNamesPage(url)
+func ExtractMessages(ctx context.Context, url string) ([]*seismo.Message, error) {
+
+	namesPage, err := GetMsgNamesPage(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("ExtractMessages: %v ", err)
 	}
@@ -24,7 +27,7 @@ func ExtractMessages(url string) ([]*seismo.Message, error) {
 
 	msgs := make([]*seismo.Message, 0, len(names))
 	for _, n := range names {
-		m, err := extractMsg(url, n)
+		m, err := extractMsg(ctx, url, n)
 		if err != nil {
 			log.Printf("extract message error: %v url: %s, name: %s", err, url, n)
 		} else {
@@ -35,8 +38,8 @@ func ExtractMessages(url string) ([]*seismo.Message, error) {
 	return msgs, nil
 }
 
-func GetMsgPages(url string) (map[string]string, error) {
-	namesPage, err := GetMsgNamesPage(url)
+func GetMsgPages(ctx context.Context, url string) (map[string]string, error) {
+	namesPage, err := GetMsgNamesPage(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("GetMsgPages: %v ", err)
 	}
@@ -45,7 +48,7 @@ func GetMsgPages(url string) (map[string]string, error) {
 
 	msgs := make(map[string]string, len(names))
 	for _, n := range names {
-		m, err := getStrMsg(url, n)
+		m, err := getStrMsg(ctx, url, n)
 		if err != nil {
 			log.Printf("GetMsgPages: get message page: %v url: %s, name: %s", err, url, n)
 		}
@@ -56,8 +59,12 @@ func GetMsgPages(url string) (map[string]string, error) {
 }
 
 // GetMsgNamesPage retrieves raw html-page containting the link names of messages
-func GetMsgNamesPage(url string) (string, error) {
-	resp, err := http.Get(url)
+func GetMsgNamesPage(ctx context.Context, url string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", fmt.Errorf("GetMsgNamesPage: \"%s\": %w", url, err)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("GetMsgNamesPage: \"%s\": %w", url, err)
 	}
@@ -81,14 +88,14 @@ func parseMsgNames(s string) []string {
 	return re.FindAllString(s, -1)
 }
 
-func extractMsg(dir string, name string) (m *seismo.Message, err error) {
+func extractMsg(ctx context.Context, dir string, name string) (m *seismo.Message, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("extractMsg: %w", err)
 		}
 	}()
 
-	sm, err := getStrMsg(dir, name)
+	sm, err := getStrMsg(ctx, dir, name)
 	if err != nil {
 		return nil, err
 	}
@@ -101,26 +108,31 @@ func extractMsg(dir string, name string) (m *seismo.Message, err error) {
 	return m, nil
 }
 
-func getStrMsg(dir string, name string) (string, error) {
+func getStrMsg(ctx context.Context, dir string, name string) (string, error) {
 	url, err := url.JoinPath(dir, name)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("getStrMsg: dir arg %q, name erg %q: %w", dir, name, err)
 	}
 
-	resp, err := http.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return "", fmt.Errorf("getStrMsg: get %s: %w", url, err)
+		return "", fmt.Errorf("getStrMsg: url %q: %w", url, err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("getStrMsg: get %q: %w", url, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("getStrMsg: get \"%s\": %s", url, resp.Status)
+		return "", fmt.Errorf("getStrMsg: get %q: %s", url, resp.Status)
 	}
 
 	buf := new(strings.Builder)
 	_, err = io.Copy(buf, resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("getStrMsg: copy response body \"%s\": %w", url, err)
+		return "", fmt.Errorf("getStrMsg: copy response body %q: %w", url, err)
 	}
 
 	return buf.String(), nil

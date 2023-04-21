@@ -1,6 +1,7 @@
 package seishub
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"seismo"
@@ -131,7 +132,7 @@ func Test_getStrMsg(t *testing.T) {
 	}
 
 	want := string(c)
-	res, err := getStrMsg(input.dir, input.name)
+	res, err := getStrMsg(context.Background(), input.dir, input.name)
 	if err != nil {
 		t.Errorf("\ngetMsg: \n\t error: %v", err)
 	}
@@ -183,7 +184,7 @@ func Test_extractMsg(t *testing.T) {
 	want.EventType = "quarry blast"
 	want.Quality = "наилучшее, обработано аналитиком"
 
-	res, err := extractMsg(input.dir, input.name)
+	res, err := extractMsg(context.Background(), input.dir, input.name)
 	if err != nil {
 		t.Errorf("Test_extractMsg: \n\t error: %v", err)
 	}
@@ -196,7 +197,7 @@ func Test_extractMsg(t *testing.T) {
 func Test_ExtractMessages(t *testing.T) {
 	input := "http://seishub.ru/pipermail/seismic-report/2023-March/"
 	//input := "http://seishub.ru/pipermail/seismic-report/2022-March/"
-	res, err := ExtractMessages(input)
+	res, err := ExtractMessages(context.Background(), input)
 	if err != nil {
 		t.Errorf("\nExtractMessages: \n\t input: %s \n\t error: %v \n\t result count: %d", input, err, len(res))
 	}
