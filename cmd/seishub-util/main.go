@@ -95,7 +95,13 @@ func getMsgPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 			return err
 		}
 
-		err = saveMsgPages(msgs, saveDir)
+		saveSubDir := path.Join(saveDir, sg)
+		err = os.MkdirAll(saveSubDir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+
+		err = saveMsgPages(msgs, saveSubDir)
 		if err != nil {
 			return err
 		}
@@ -134,8 +140,8 @@ func getListPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 	return nil
 }
 
-func saveFile(name, cont string) error {
-	f, err := os.Create(name)
+func saveFile(path, cont string) error {
+	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
