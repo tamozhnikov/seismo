@@ -75,7 +75,7 @@ func GetMsgPages(ctx context.Context, url string) (map[string]string, error) {
 
 	msgs := make(map[string]string, len(names))
 	for _, n := range names {
-		m, err := getStrMsg(ctx, url, n)
+		m, err := getMsgPage(ctx, url, n)
 		if err != nil {
 			log.Printf("GetMsgPages: get message page: %v url: %s, name: %s", err, url, n)
 		}
@@ -122,7 +122,7 @@ func extractMsg(ctx context.Context, dir string, name string) (m *seismo.Message
 		}
 	}()
 
-	sm, err := getStrMsg(ctx, dir, name)
+	sm, err := getMsgPage(ctx, dir, name)
 	if err != nil {
 		return nil, err
 	}
@@ -135,31 +135,31 @@ func extractMsg(ctx context.Context, dir string, name string) (m *seismo.Message
 	return m, nil
 }
 
-func getStrMsg(ctx context.Context, dir string, name string) (string, error) {
+func getMsgPage(ctx context.Context, dir string, name string) (string, error) {
 	url, err := url.JoinPath(dir, name)
 	if err != nil {
-		return "", fmt.Errorf("getStrMsg: dir arg %q, name erg %q: %w", dir, name, err)
+		return "", fmt.Errorf("getMsgPage: dir arg %q, name erg %q: %w", dir, name, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return "", fmt.Errorf("getStrMsg: url %q: %w", url, err)
+		return "", fmt.Errorf("getMsgPage: url %q: %w", url, err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("getStrMsg: get %q: %w", url, err)
+		return "", fmt.Errorf("getMsgPage: get %q: %w", url, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("getStrMsg: get %q: %s", url, resp.Status)
+		return "", fmt.Errorf("getMsgPage: get %q: %s", url, resp.Status)
 	}
 
 	buf := new(strings.Builder)
 	_, err = io.Copy(buf, resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("getStrMsg: copy response body %q: %w", url, err)
+		return "", fmt.Errorf("getMsgPage: copy response body %q: %w", url, err)
 	}
 
 	return buf.String(), nil

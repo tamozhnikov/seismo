@@ -132,13 +132,13 @@ func Test_getStrMsg(t *testing.T) {
 	}
 
 	want := string(c)
-	res, err := getStrMsg(context.Background(), input.dir, input.name)
+	res, err := getMsgPage(context.Background(), input.dir, input.name)
 	if err != nil {
-		t.Errorf("\ngetMsg: \n\t error: %v", err)
+		t.Errorf("\ngetMsgPage: \n\t error: %v", err)
 	}
 
 	if res != want {
-		t.Errorf(("\ngetMsg \n\t result != want"))
+		t.Errorf(("\ngetMsgPage \n\t result != want"))
 	}
 }
 
