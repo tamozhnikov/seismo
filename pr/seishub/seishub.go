@@ -16,6 +16,33 @@ import (
 
 var client = http.Client{Timeout: 60 * time.Second}
 
+const defBaseAddr = "http://seishub.ru/pipermail/seismic-report/"
+
+type Processor struct {
+	BaseAddr string
+	http.Client
+}
+
+func NewProcessor(baseAddr string, timeout time.Duration) *Processor {
+	if baseAddr == "" {
+		baseAddr = defBaseAddr
+	}
+
+	if timeout == 0 {
+		timeout = 60 * time.Second
+	}
+
+	return &Processor{BaseAddr: baseAddr, Client: http.Client{Timeout: timeout}}
+}
+
+func (p *Processor) Watch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
+	ch := make(chan seismo.Message)
+	go func() {
+		//TO DO: this function watches the seishub, extracts new messages and send them into the channel
+	}()
+	return ch, nil
+}
+
 func ExtractMessages(ctx context.Context, url string) ([]*seismo.Message, error) {
 
 	namesPage, err := GetMsgNamesPage(ctx, url)
