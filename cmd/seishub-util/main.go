@@ -84,7 +84,7 @@ func main() {
 
 func getMsgPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 	for my := from.Date(); !my.After(to.Date()); my = my.AddDate(0, 1, 0) {
-		sg := monthYearPathSeg(my.Month(), my.Year())
+		sg := seishub.MonthYearPathSeg(my.Month(), my.Year())
 		url, err := url.JoinPath(baseAddr, sg)
 		if err != nil {
 			return err
@@ -121,13 +121,13 @@ func saveMsgPages(msgs map[string]string, saveDir string) error {
 
 func getListPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 	for my := from.Date(); !my.After(to.Date()); my = my.AddDate(0, 1, 0) {
-		sg := monthYearPathSeg(my.Month(), my.Year())
+		sg := seishub.MonthYearPathSeg(my.Month(), my.Year())
 		url, err := url.JoinPath(baseAddr, sg)
 		if err != nil {
 			return err
 		}
 
-		pg, err := seishub.GetMsgNamesPage(context.Background(), url)
+		pg, err := seishub.GetMsgNamesPage(context.Background(), url, nil)
 		if err != nil {
 			return err
 		}
@@ -151,8 +151,4 @@ func saveFile(path, cont string) error {
 		return err
 	}
 	return nil
-}
-
-func monthYearPathSeg(m time.Month, y int) string {
-	return fmt.Sprintf("%d-%s", y, m.String())
 }

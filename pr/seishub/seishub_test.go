@@ -132,7 +132,7 @@ func Test_getStrMsg(t *testing.T) {
 	}
 
 	want := string(c)
-	res, err := getMsgPage(context.Background(), input.dir, input.name)
+	res, err := getMsgPage(context.Background(), input.dir, input.name, nil)
 	if err != nil {
 		t.Errorf("\ngetMsgPage: \n\t error: %v", err)
 	}
@@ -194,14 +194,14 @@ func Test_extractMsg(t *testing.T) {
 	}
 }
 
-func Test_ExtractMessages(t *testing.T) {
-	input := "http://seishub.ru/pipermail/seismic-report/2023-March/"
-	//input := "http://seishub.ru/pipermail/seismic-report/2022-March/"
-	res, err := ExtractMessages(context.Background(), input)
-	if err != nil {
-		t.Errorf("\nExtractMessages: \n\t input: %s \n\t error: %v \n\t result count: %d", input, err, len(res))
-	}
-}
+// func Test_ExtractMessages(t *testing.T) {
+// 	input := "http://seishub.ru/pipermail/seismic-report/2023-March/"
+// 	//input := "http://seishub.ru/pipermail/seismic-report/2022-March/"
+// 	res, err := ExtractMessages(context.Background(), input)
+// 	if err != nil {
+// 		t.Errorf("\nExtractMessages: \n\t input: %s \n\t error: %v \n\t result count: %d", input, err, len(res))
+// 	}
+// }
 
 // func Test_monthYearPathSeg(t *testing.T) {
 // 	var tests = []struct {
