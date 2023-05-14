@@ -145,7 +145,7 @@ func ParseMsg(msg string) (*seismo.Message, error) {
 	resMsg.Longitude = lng
 
 	//Parse Magnitude (optional)
-	re = regexp.MustCompile(`МАГНИТУДА:\s*[nan0-9.]+`)
+	re = regexp.MustCompile(`МАГНИТУДА:\s*[0-9.]+`)
 	mgn, err := strconv.ParseFloat(strings.Trim(strings.TrimPrefix(re.FindString(msg), "МАГНИТУДА:"), " \r\n"), 64)
 	if err != nil {
 		return nil, fmt.Errorf("parseMsg: parse Magnitude: %w", err)

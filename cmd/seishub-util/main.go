@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"path"
@@ -17,8 +20,11 @@ const (
 	defOutDir   = "out"
 
 	//Modes
-	listPageMode = "lp"
-	msgPageMode  = "mp"
+	listPageMode   = "lp"
+	msgPageMode    = "mp"
+	parseFilesMode = "pf"
+	//Max input file size in bytes
+	maxInputSize = 1024 * 10 //10 KB
 )
 
 // Main checks all the flag values end runs functions of a specified mode logic
@@ -82,6 +88,48 @@ func main() {
 	}
 }
 
+func parseMsgFiles(inputDir, saveDir string) error {
+	files, err := ioutil.ReadDir(inputDir)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(saveDir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	for _, f := range files {
+		if f.IsDir() || f.Size() > maxInputSize {
+			log.Printf("Skiping. \"%s\" is a folder or too big.\n", f.Name())
+			continue
+		}
+
+		bf, err := ioutil.ReadFile(path.Join(inputDir, f.Name()))
+		if err != nil {
+			log.Printf("Skiping. Cannot read \"%s\": %v\n", f.Name(), err)
+			continue
+		}
+
+		msg, err := seishub.ParseMsg(string(bf))
+		if err != nil {
+			log.Printf("Skiping. Cannot parse \"%s\": %v\n", f.Name(), err)
+			continue
+		}
+
+		js, err := json.MarshalIndent(msg, "", " ")
+		if err != nil {
+			return err
+		}
+
+		err = saveFile(path.Join(saveDir, f.Name()+".json"), string(js))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func getMsgPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 	for my := from.Date(); !my.After(to.Date()); my = my.AddDate(0, 1, 0) {
 		sg := seishub.MonthYearPathSeg(my.Month(), my.Year())
@@ -101,17 +149,7 @@ func getMsgPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 			return err
 		}
 
-		err = saveMsgPages(msgs, saveSubDir)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func saveMsgPages(msgs map[string]string, saveDir string) error {
-	for name, msg := range msgs {
-		err := saveFile(path.Join(saveDir, name), msg)
+		err = saveMappedTexts(msgs, saveSubDir)
 		if err != nil {
 			return err
 		}
@@ -149,6 +187,16 @@ func saveFile(path, cont string) error {
 
 	if _, err := f.WriteString(cont); err != nil {
 		return err
+	}
+	return nil
+}
+
+func saveMappedTexts(msgs map[string]string, saveDir string) error {
+	for name, msg := range msgs {
+		err := saveFile(path.Join(saveDir, name), msg)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

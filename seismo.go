@@ -8,14 +8,14 @@ import (
 
 // Message represents contains common information about seismic event
 type Message struct {
-	EventId   string
-	FocusTime time.Time
-	Latitude  float64
-	Longitude float64
-	Depth     float64
-	Magnitude float64
-	EventType string
-	Quality   string
+	EventId   string    `json:"event_id"`
+	FocusTime time.Time `json:"focus_time"`
+	Latitude  float64   `json:"latitude"`
+	Longitude float64   `json:"longitude"`
+	Depth     float64   `json:"depth"`
+	Magnitude float64   `json:"magnitude"`
+	EventType string    `json:"event_type"`
+	Quality   string    `json:"quality"`
 }
 
 // MonthYear represents a month of a year
