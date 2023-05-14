@@ -41,6 +41,7 @@ func main() {
 	modeFlag := flag.String("mode", listPageMode, modeFlagUsage)
 
 	outFlag := flag.String("out", "", "output folder")
+	inFlag := flag.String("in", "", "input folder")
 
 	flag.Parse()
 
@@ -54,15 +55,20 @@ func main() {
 		*baseAddrFlag = defBaseAddr
 	}
 
-	if *outFlag == "" {
-		ep, err := os.Executable()
-		if err != nil {
-			fmt.Printf("Cannot define the path to the executable file: %v.\n", err)
-			return
-		}
+	ep, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Cannot define the path to the executable file: %v.\n", err)
+		return
+	}
 
+	if *outFlag == "" {
 		fmt.Printf("The value of the out flag is not specified.The default value \"%s\" will be used.\n", defOutDir)
 		*outFlag = path.Join(path.Dir(ep), defOutDir)
+	}
+
+	if *inFlag == "" {
+		fmt.Printf("The value of \"in\" flag is not specified. The folder of the executable will be used.\n")
+		*inFlag = ep
 	}
 
 	if err := os.MkdirAll(*outFlag, os.ModePerm); err != nil {
@@ -81,6 +87,11 @@ func main() {
 		err := getMsgPages(*fromFlag, *toFlag, *baseAddrFlag, *outFlag)
 		if err != nil {
 			fmt.Printf("Getting message pages error: %v.\n", err)
+		}
+	case parseFilesMode:
+		err := parseMsgFiles(*inFlag, *outFlag)
+		if err != nil {
+			fmt.Printf("Parse files error: %v.\n", err)
 		}
 	default:
 		fmt.Println("A mode specified incorrectly.")

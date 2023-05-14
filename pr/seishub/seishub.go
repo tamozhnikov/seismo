@@ -146,11 +146,14 @@ func ParseMsg(msg string) (*seismo.Message, error) {
 
 	//Parse Magnitude (optional)
 	re = regexp.MustCompile(`МАГНИТУДА:\s*[0-9.]+`)
-	mgn, err := strconv.ParseFloat(strings.Trim(strings.TrimPrefix(re.FindString(msg), "МАГНИТУДА:"), " \r\n"), 64)
-	if err != nil {
-		return nil, fmt.Errorf("parseMsg: parse Magnitude: %w", err)
+	valStr := strings.Trim(strings.TrimPrefix(re.FindString(msg), "МАГНИТУДА:"), " \r\n")
+	if valStr != "" {
+		mgn, err := strconv.ParseFloat(valStr, 64)
+		if err != nil {
+			return nil, fmt.Errorf("parseMsg: parse Magnitude: %w", err)
+		}
+		resMsg.Magnitude = mgn
 	}
-	resMsg.Magnitude = mgn
 
 	//Parse EventType (optional)
 	re = regexp.MustCompile(`ТИП СОБЫТИЯ:\s*[A-Za-z ]+`)
