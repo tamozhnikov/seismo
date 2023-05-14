@@ -12,10 +12,10 @@ type Message struct {
 	FocusTime time.Time `json:"focus_time"`
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
-	Depth     float64   `json:"depth"`
-	Magnitude float64   `json:"magnitude"`
-	EventType string    `json:"event_type"`
-	Quality   string    `json:"quality"`
+	//Depth     float64   `json:"depth"`
+	Magnitude float64 `json:"magnitude"`
+	EventType string  `json:"event_type"`
+	Quality   string  `json:"quality"`
 }
 
 // MonthYear represents a month of a year
