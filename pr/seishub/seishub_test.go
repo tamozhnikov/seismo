@@ -10,6 +10,8 @@ import (
 	"seismo"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 const (
@@ -80,10 +82,8 @@ func Test_parseMsgNames(t *testing.T) {
 		t.Fail()
 	}
 
-	for i := 0; i < len(res); i++ {
-		if want[i] != res[i] {
-			t.Fail()
-		}
+	if !cmp.Equal(res, want) {
+		t.Fail()
 	}
 
 	buf := new(strings.Builder)
