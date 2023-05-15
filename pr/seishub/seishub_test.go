@@ -148,31 +148,6 @@ func Test_getMsgPage(t *testing.T) {
 	}
 }
 
-// func Test_ParseMsg(t *testing.T) {
-// 	input, err := os.ReadFile("testdata/msg_asb2023eesfwx.html")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	want := seismo.Message{EventId: "asb2023eesfwx"}
-// 	want.FocusTime, _ = time.Parse("2006.01.02 03:04:05", "2023.03.01 05:13:16.43")
-// 	want.Latitude = 54.71
-// 	want.Longitude = 83.67
-// 	want.Magnitude = 3.3
-// 	want.EventType = "quarry blast"
-// 	want.Quality = "наилучшее, обработано аналитиком"
-
-// 	res, err := ParseMsg(string(input))
-
-// 	if err != nil {
-// 		t.Errorf("parseMsg: \n\t error: %v", err)
-// 	}
-
-// 	if res == nil || *res != want {
-// 		t.Errorf("parseMsg: \n\t result != want")
-// 	}
-// }
-
 func Test_ParseMsg(t *testing.T) {
 	inputDataDir := "testdata/html/2022-February"
 	wantDataDir := "testdata/json_msg/2022-February"
