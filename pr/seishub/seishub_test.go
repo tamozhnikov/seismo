@@ -2,12 +2,18 @@ package seishub
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"seismo"
 	"strings"
 	"testing"
-	"time"
+)
+
+const (
+	maxInputSize = 10 * 1024
 )
 
 func Test_parseMsgNames(t *testing.T) {
@@ -120,13 +126,13 @@ func max(a, b int) int {
 	return b
 }
 
-func Test_getStrMsg(t *testing.T) {
+func Test_getMsgPage(t *testing.T) {
 	var input = struct {
 		dir  string
 		name string
 	}{"http://seishub.ru/pipermail/seismic-report/2023-March", "021128.html"}
 
-	c, err := os.ReadFile("testdata/msg_asb2023eesfwx.html")
+	c, err := os.ReadFile("testdata/html/msg_asb2023eesfwx.html")
 	if err != nil {
 		panic(err)
 	}
@@ -142,62 +148,94 @@ func Test_getStrMsg(t *testing.T) {
 	}
 }
 
+// func Test_ParseMsg(t *testing.T) {
+// 	input, err := os.ReadFile("testdata/msg_asb2023eesfwx.html")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	want := seismo.Message{EventId: "asb2023eesfwx"}
+// 	want.FocusTime, _ = time.Parse("2006.01.02 03:04:05", "2023.03.01 05:13:16.43")
+// 	want.Latitude = 54.71
+// 	want.Longitude = 83.67
+// 	want.Magnitude = 3.3
+// 	want.EventType = "quarry blast"
+// 	want.Quality = "наилучшее, обработано аналитиком"
+
+// 	res, err := ParseMsg(string(input))
+
+// 	if err != nil {
+// 		t.Errorf("parseMsg: \n\t error: %v", err)
+// 	}
+
+// 	if res == nil || *res != want {
+// 		t.Errorf("parseMsg: \n\t result != want")
+// 	}
+// }
+
 func Test_ParseMsg(t *testing.T) {
-	input, err := os.ReadFile("testdata/msg_asb2023eesfwx.html")
+	inputDataDir := "testdata/html/2022-February"
+	wantDataDir := "testdata/json_msg/2022-February"
+
+	inputFiles, err := ioutil.ReadDir(inputDataDir)
 	if err != nil {
-		panic(err)
+		t.Fatalf("Cannot read input data directory content list: %s", inputDataDir)
 	}
 
-	want := seismo.Message{EventId: "asb2023eesfwx"}
-	want.FocusTime, _ = time.Parse("2006.01.02 03:04:05", "2023.03.01 05:13:16.43")
-	want.Latitude = 54.71
-	want.Longitude = 83.67
-	want.Magnitude = 3.3
-	want.EventType = "quarry blast"
-	want.Quality = "наилучшее, обработано аналитиком"
+	for _, f := range inputFiles {
+		if f.IsDir() || f.Size() > maxInputSize {
+			t.Logf("Skiping. \"%s\" is a folder or too big.\n", f.Name())
+			continue
+		}
 
-	res, err := ParseMsg(string(input))
+		inputBuf, err := os.ReadFile(path.Join(inputDataDir, f.Name()))
+		if err != nil {
+			t.Fatalf("Cannot read \"%s\": %v\n", f.Name(), err)
+		}
 
-	if err != nil {
-		t.Errorf("parseMsg: \n\t error: %v", err)
-	}
+		wantBuf, err := os.ReadFile(path.Join(wantDataDir, f.Name()+".json"))
+		if err != nil {
+			t.Fatalf("Cannot read \"%s\": %v\n", f.Name()+".json", err)
+		}
 
-	if res == nil || *res != want {
-		t.Errorf("parseMsg: \n\t result != want")
+		resultMsg, err := ParseMsg(string(inputBuf))
+		if err != nil {
+			t.Errorf("\nCannot parse \"%s\": %v\n", f.Name(), err)
+		}
+
+		var wantMsg seismo.Message
+		if err = json.Unmarshal(wantBuf, &wantMsg); err != nil {
+			t.Fatalf("\nCannot unmarshal \"%s\"; error: %v", f.Name()+".json", err)
+		}
+
+		if *resultMsg != wantMsg {
+			t.Errorf("\nParseMsg: \twant: %v\n\t result: %v\n", wantMsg, *resultMsg)
+		}
 	}
 }
 
-// func Test_ExtractMessages(t *testing.T) {
-// 	input := "http://seishub.ru/pipermail/seismic-report/2023-March/"
-// 	//input := "http://seishub.ru/pipermail/seismic-report/2022-March/"
-// 	res, err := ExtractMessages(context.Background(), input)
-// 	if err != nil {
-// 		t.Errorf("\nExtractMessages: \n\t input: %s \n\t error: %v \n\t result count: %d", input, err, len(res))
-// 	}
-// }
+func Test_monthYearPathSeg(t *testing.T) {
+	var tests = []struct {
+		input seismo.MonthYear
+		want  string
+	}{
+		{seismo.MonthYear{1, 2022}, "2022-January"},
+		{seismo.MonthYear{2, 2022}, "2022-February"},
+		{seismo.MonthYear{3, 2022}, "2022-March"},
+		{seismo.MonthYear{4, 2022}, "2022-April"},
+		{seismo.MonthYear{5, 2022}, "2022-May"},
+		{seismo.MonthYear{6, 2022}, "2022-June"},
+		{seismo.MonthYear{7, 2022}, "2022-July"},
+		{seismo.MonthYear{8, 2022}, "2022-August"},
+		{seismo.MonthYear{9, 2022}, "2022-September"},
+		{seismo.MonthYear{10, 2022}, "2022-October"},
+		{seismo.MonthYear{11, 2022}, "2022-November"},
+		{seismo.MonthYear{12, 2022}, "2022-December"},
+	}
 
-// func Test_monthYearPathSeg(t *testing.T) {
-// 	var tests = []struct {
-// 		input sd.MonthYear
-// 		want  string
-// 	}{
-// 		{sd.MonthYear{1, 2022}, "2022-January"},
-// 		{sd.MonthYear{2, 2022}, "2022-February"},
-// 		{sd.MonthYear{3, 2022}, "2022-March"},
-// 		{sd.MonthYear{4, 2022}, "2022-April"},
-// 		{sd.MonthYear{5, 2022}, "2022-May"},
-// 		{sd.MonthYear{6, 2022}, "2022-June"},
-// 		{sd.MonthYear{7, 2022}, "2022-July"},
-// 		{sd.MonthYear{8, 2022}, "2022-August"},
-// 		{sd.MonthYear{9, 2022}, "2022-September"},
-// 		{sd.MonthYear{10, 2022}, "2022-October"},
-// 		{sd.MonthYear{11, 2022}, "2022-November"},
-// 		{sd.MonthYear{12, 2022}, "2022-December"},
-// 	}
-
-// 	for _, test := range tests {
-// 		if res := monthYearPathSeg(test.input); res != test.want {
-// 			t.Errorf("input: %s result: %s", test.input.String(), res)
-// 		}
-// 	}
-// }
+	for _, test := range tests {
+		if res := MonthYearPathSeg(test.input.Month, test.input.Year); res != test.want {
+			t.Errorf("input: %s result: %s", test.input.String(), res)
+		}
+	}
+}
