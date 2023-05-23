@@ -25,14 +25,44 @@ type MonthYear struct {
 }
 
 // String represents a value in month/year format
-func (my *MonthYear) String() string {
-	return fmt.Sprintf("%d/%d", my.Month, my.Year)
+func (m *MonthYear) String() string {
+	return fmt.Sprintf("%d/%d", m.Month, m.Year)
 }
 
 // Date creates UTC date with the 1st day of month
-func (my *MonthYear) Date() time.Time {
-	return time.Date(my.Year, my.Month, 1, 0, 0, 0, 0, time.UTC)
+func (m *MonthYear) Date() time.Time {
+	return time.Date(m.Year, m.Month, 1, 0, 0, 0, 0, time.UTC)
 }
+
+func (m *MonthYear) After(u MonthYear) bool {
+	if m.Year > u.Year || (m.Year == u.Year && m.Month > u.Month) {
+		return true
+	}
+
+	return false
+}
+
+func (m *MonthYear) AddMonth(n int) {
+	m.Year += n / 12
+	md := int(m.Month) + n%12
+	switch {
+	case md > 12:
+		m.Year++
+		m.Month = time.Month(md - 12)
+	case md <= 0:
+		m.Year--
+		m.Month = time.Month(12 + md)
+	default:
+		m.Month = time.Month(md)
+	}
+}
+
+// Sub returns difference in months. Returns an error if "smy" (subtrahend) arg more
+// func (m *MonthYear) Sub(u MonthYear) (int, error) {
+// 	if m.After(u) {
+
+// 	}
+// }
 
 type monthYearFlag struct {
 	MonthYear

@@ -57,10 +57,12 @@ func (e *Extractor) Watch(ctx context.Context, from time.Time, checkPeriod time.
 func (e *Extractor) ExtractMessages(ctx context.Context, from seismo.MonthYear, to seismo.MonthYear) ([]*seismo.Message, error) {
 	fromDate, toDate := from.Date(), to.Date()
 	if fromDate.After(toDate) {
-		return nil, fmt.Errorf("ExtractMessages: the from arg cannot be more than the to arg")
+		return nil, fmt.Errorf(`ExtractMessages: the "from" arg cannot be more than the "to" arg`)
 	}
 
-	msgs := make([]*seismo.Message, 0, avgMonthMsgNum*(int(fromDate.Sub(toDate).Hours())/24+1))
+	msgs := avgMonthMsgNum * (int(toDate.Sub(fromDate).Hours())/(24*28) + 1)
+
+	//msgs := make([]*seismo.Message, 0, msgCap)
 
 	//iterate months
 	for my := fromDate; !my.After(toDate); my = my.AddDate(0, 1, 0) {

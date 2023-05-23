@@ -34,11 +34,10 @@ func Test_extractMsg(t *testing.T) {
 	}
 }
 
-// func Test_ExtractMessages(t *testing.T) {
-// 	input := "http://seishub.ru/pipermail/seismic-report/2023-March/"
-// 	//input := "http://seishub.ru/pipermail/seismic-report/2022-March/"
-// 	res, err := ExtractMessages(context.Background(), input)
-// 	if err != nil {
-// 		t.Errorf("\nExtractMessages: \n\t input: %s \n\t error: %v \n\t result count: %d", input, err, len(res))
-// 	}
-// }
+func Test_ExtractMessages(t *testing.T) {
+	ext := NewExtractor("", 0)
+	_, err := ext.ExtractMessages(context.Background(), seismo.MonthYear{1, 1931}, seismo.MonthYear{12, 2000})
+	if err != nil {
+		t.Fatalf("ExtractMessages: error: %v", err)
+	}
+}
