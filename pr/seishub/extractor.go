@@ -3,9 +3,7 @@ package seishub
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
-	"net/url"
 	"seismo"
 	"time"
 )
@@ -55,41 +53,43 @@ func (e *Extractor) Watch(ctx context.Context, from time.Time, checkPeriod time.
 
 // ExtractMessages returns seismic messages extracted from SEISHUB.
 func (e *Extractor) ExtractMessages(ctx context.Context, from seismo.MonthYear, to seismo.MonthYear) ([]*seismo.Message, error) {
-	fromDate, toDate := from.Date(), to.Date()
-	if fromDate.After(toDate) {
-		return nil, fmt.Errorf(`ExtractMessages: the "from" arg cannot be more than the "to" arg`)
-	}
+	// // fromDate, toDate := from.Date(), to.Date()
+	// //  fromDate.After()
+	// if from.After(to) {
+	// 	return nil, fmt.Errorf(`ExtractMessages: the "from" arg cannot be more than the "to" arg`)
+	// }
 
-	msgs := avgMonthMsgNum * (int(toDate.Sub(fromDate).Hours())/(24*28) + 1)
+	// msgs := avgMonthMsgNum * (int(toDate.Sub(fromDate).Hours())/(24*28) + 1)
 
-	//msgs := make([]*seismo.Message, 0, msgCap)
+	// //msgs := make([]*seismo.Message, 0, msgCap)
 
-	//iterate months
-	for my := fromDate; !my.After(toDate); my = my.AddDate(0, 1, 0) {
-		sg := MonthYearPathSeg(my.Month(), my.Year())
-		url, err := url.JoinPath(e.BaseAddr, sg)
-		if err != nil {
-			return nil, fmt.Errorf("ExtractMessages: %v", err)
-		}
+	// //iterate months
+	// for my := fromDate; !my.After(toDate); my = my.AddDate(0, 1, 0) {
+	// 	sg := MonthYearPathSeg(my.Month(), my.Year())
+	// 	url, err := url.JoinPath(e.BaseAddr, sg)
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("ExtractMessages: %v", err)
+	// 	}
 
-		namesPage, err := GetMsgNamesPage(ctx, url, nil)
-		if err != nil {
-			return nil, fmt.Errorf("ExtractMessages: %v ", err)
-		}
+	// 	namesPage, err := GetMsgNamesPage(ctx, url, nil)
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("ExtractMessages: %v ", err)
+	// 	}
 
-		names := parseMsgNames(namesPage)
+	// 	names := parseMsgNames(namesPage)
 
-		//iterate msg page link-names for current month
-		for _, n := range names {
-			m, err := extractMsg(ctx, url, n)
-			if err != nil {
-				log.Printf("extract message error: %v url: %s, name: %s", err, url, n)
-			} else {
-				msgs = append(msgs, m)
-			}
-		}
-	}
-	return msgs, nil
+	// 	//iterate msg page link-names for current month
+	// 	for _, n := range names {
+	// 		m, err := extractMsg(ctx, url, n)
+	// 		if err != nil {
+	// 			log.Printf("extract message error: %v url: %s, name: %s", err, url, n)
+	// 		} else {
+	// 			msgs = append(msgs, m)
+	// 		}
+	// 	}
+	// }
+	// return msgs, nil
+	return nil, nil
 }
 
 func extractMsg(ctx context.Context, dir string, name string) (m *seismo.Message, err error) {

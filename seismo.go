@@ -34,6 +34,7 @@ func (m *MonthYear) Date() time.Time {
 	return time.Date(m.Year, m.Month, 1, 0, 0, 0, 0, time.UTC)
 }
 
+// After reports whether the MonthYear instant m is after u
 func (m *MonthYear) After(u MonthYear) bool {
 	if m.Year > u.Year || (m.Year == u.Year && m.Month > u.Month) {
 		return true
@@ -42,6 +43,7 @@ func (m *MonthYear) After(u MonthYear) bool {
 	return false
 }
 
+// AddMonth adds n months to the MonthYear instant value
 func (m *MonthYear) AddMonth(n int) {
 	m.Year += n / 12
 	md := int(m.Month) + n%12
@@ -57,12 +59,10 @@ func (m *MonthYear) AddMonth(n int) {
 	}
 }
 
-// Sub returns difference in months. Returns an error if "smy" (subtrahend) arg more
-// func (m *MonthYear) Sub(u MonthYear) (int, error) {
-// 	if m.After(u) {
-
-// 	}
-// }
+// Diff returns difference in months. A returned value is negative if u is after m.
+func (m *MonthYear) Diff(u MonthYear) int {
+	return (m.Year-u.Year)*12 + (int(m.Month) - int(u.Month))
+}
 
 type monthYearFlag struct {
 	MonthYear
