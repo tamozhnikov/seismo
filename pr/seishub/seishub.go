@@ -16,8 +16,8 @@ import (
 
 var defClient = http.Client{Timeout: 60 * time.Second}
 
-func GetMsgPages(ctx context.Context, url string) (map[string]string, error) {
-	namesPage, err := GetMsgNamesPage(ctx, url, nil)
+func GetMsgPages(ctx context.Context, dir string) (map[string]string, error) {
+	namesPage, err := GetMsgNamesPage(ctx, dir, nil)
 	if err != nil {
 		return nil, fmt.Errorf("GetMsgPages: %v ", err)
 	}
@@ -26,9 +26,13 @@ func GetMsgPages(ctx context.Context, url string) (map[string]string, error) {
 
 	msgs := make(map[string]string, len(names))
 	for _, n := range names {
-		m, err := getMsgPage(ctx, url, n, nil)
+		url, err := url.JoinPath(dir, n)
 		if err != nil {
-			log.Printf("GetMsgPages: get message page: %v url: %s, name: %s", err, url, n)
+			log.Printf("GetMsgPage: dir %q, name %q: %V", dir, n, err)
+		}
+		m, err := getMsgPage(ctx, url, nil)
+		if err != nil {
+			log.Printf("GetMsgPages: get message page: %v url: %s, name: %s", err, dir, n)
 		}
 		msgs[n] = m
 	}
@@ -74,15 +78,15 @@ func parseMsgNames(s string) []string {
 	return re.FindAllString(s, -1)
 }
 
-func getMsgPage(ctx context.Context, dir string, name string, cl *http.Client) (string, error) {
+func getMsgPage(ctx context.Context, url string, cl *http.Client) (string, error) {
 	if cl == nil {
 		cl = &defClient
 	}
 
-	url, err := url.JoinPath(dir, name)
-	if err != nil {
-		return "", fmt.Errorf("getMsgPage: dir arg %q, name erg %q: %w", dir, name, err)
-	}
+	// url, err := url.JoinPath(dir, name)
+	// if err != nil {
+	// 	return "", fmt.Errorf("getMsgPage: dir arg %q, name erg %q: %w", dir, name, err)
+	// }
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

@@ -128,9 +128,8 @@ func max(a, b int) int {
 
 func Test_getMsgPage(t *testing.T) {
 	var input = struct {
-		dir  string
-		name string
-	}{"http://seishub.ru/pipermail/seismic-report/2023-March", "021128.html"}
+		url string
+	}{"http://seishub.ru/pipermail/seismic-report/2023-March/021128.html"}
 
 	c, err := os.ReadFile("testdata/html/msg_asb2023eesfwx.html")
 	if err != nil {
@@ -138,7 +137,7 @@ func Test_getMsgPage(t *testing.T) {
 	}
 
 	want := string(c)
-	res, err := getMsgPage(context.Background(), input.dir, input.name, nil)
+	res, err := getMsgPage(context.Background(), input.url, nil)
 	if err != nil {
 		t.Errorf("\ngetMsgPage: \n\t error: %v", err)
 	}

@@ -9,11 +9,9 @@ import (
 
 func Test_extractMsg(t *testing.T) {
 	input := struct {
-		dir  string
-		name string
+		url string
 	}{
-		"http://seishub.ru/pipermail/seismic-report/2023-March",
-		"021128.html",
+		"http://seishub.ru/pipermail/seismic-report/2023-March/021128.html",
 	}
 
 	want := seismo.Message{EventId: "asb2023eesfwx"}
@@ -24,7 +22,7 @@ func Test_extractMsg(t *testing.T) {
 	want.EventType = "quarry blast"
 	want.Quality = "наилучшее, обработано аналитиком"
 
-	res, err := extractMsg(context.Background(), input.dir, input.name)
+	res, err := extractMsg(context.Background(), input.url)
 	if err != nil {
 		t.Errorf("Test_extractMsg: \n\t error: %v", err)
 	}
@@ -36,8 +34,9 @@ func Test_extractMsg(t *testing.T) {
 
 func Test_ExtractMessages(t *testing.T) {
 	ext := NewExtractor("", 0)
-	_, err := ext.ExtractMessages(context.Background(), seismo.MonthYear{1, 1931}, seismo.MonthYear{12, 2000})
+	msgs, err := ext.ExtractMessages(context.Background(), seismo.MonthYear{2, 2023}, seismo.MonthYear{2, 2023}, 7)
 	if err != nil {
 		t.Fatalf("ExtractMessages: error: %v", err)
 	}
+	t.Log(len(msgs))
 }

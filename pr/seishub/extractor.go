@@ -3,8 +3,11 @@ package seishub
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 	"seismo"
+	"sync"
 	"time"
 )
 
@@ -12,9 +15,13 @@ const (
 	//defBaseAddr constant defines the basic default address for SEISHUB
 	defBaseAddr = "http://seishub.ru/pipermail/seismic-report/"
 
-	//avgMonthMsgNum constant returns average number of seismic messages per month
+	//defParal constant defines max number of go routings each of them gets one
+	//message from seishub
+	defParal = 10
+
+	//avgMonthMsgNum constant defines average number of seismic messages per month
 	//on SEISHUB. This constant is used to create slices with proper capacity.
-	avgMonthMsgNum = 300
+	avgMonthMsgNum = 200
 )
 
 // Extractor provides getting seismic event messages
@@ -52,54 +59,72 @@ func (e *Extractor) Watch(ctx context.Context, from time.Time, checkPeriod time.
 }
 
 // ExtractMessages returns seismic messages extracted from SEISHUB.
-func (e *Extractor) ExtractMessages(ctx context.Context, from seismo.MonthYear, to seismo.MonthYear) ([]*seismo.Message, error) {
-	// // fromDate, toDate := from.Date(), to.Date()
-	// //  fromDate.After()
-	// if from.After(to) {
-	// 	return nil, fmt.Errorf(`ExtractMessages: the "from" arg cannot be more than the "to" arg`)
-	// }
+func (e *Extractor) ExtractMessages(ctx context.Context, from seismo.MonthYear, to seismo.MonthYear, paral int) ([]*seismo.Message, error) {
+	monthNum := to.Diff(from) + 1
+	if monthNum <= 0 {
+		return nil, fmt.Errorf(`ExtractMessages: the "from" arg cannot be more than the "to" arg`)
+	}
 
-	// msgs := avgMonthMsgNum * (int(toDate.Sub(fromDate).Hours())/(24*28) + 1)
+	if paral <= 0 {
+		paral = defParal
+	}
 
-	// //msgs := make([]*seismo.Message, 0, msgCap)
+	//Result slice of messages
+	msgs := make([]*seismo.Message, 0, avgMonthMsgNum*monthNum)
+	links := make(chan string)
 
-	// //iterate months
-	// for my := fromDate; !my.After(toDate); my = my.AddDate(0, 1, 0) {
-	// 	sg := MonthYearPathSeg(my.Month(), my.Year())
-	// 	url, err := url.JoinPath(e.BaseAddr, sg)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("ExtractMessages: %v", err)
-	// 	}
+	var wg sync.WaitGroup
+	wg.Add(paral)
+	for i := 0; i < paral; i++ {
+		go func() {
+			defer func() {
+				wg.Done()
+			}()
+			for l := range links {
+				msg, err := extractMsg(ctx, l)
+				if err != nil {
+					log.Printf("extract message error: %v url: %s", err, l)
+				} else {
+					msgs = append(msgs, msg)
+				}
+			}
+		}()
+	}
 
-	// 	namesPage, err := GetMsgNamesPage(ctx, url, nil)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("ExtractMessages: %v ", err)
-	// 	}
+	for m := from; !m.After(to); m.AddMonth(1) {
+		sg := MonthYearPathSeg(m.Month, m.Year)
+		monthLink, err := url.JoinPath(e.BaseAddr, sg)
+		if err != nil {
+			return nil, fmt.Errorf("ExtractMessages: %v", err)
+		}
 
-	// 	names := parseMsgNames(namesPage)
+		namesPage, err := GetMsgNamesPage(ctx, monthLink, nil)
+		if err != nil {
+			return nil, fmt.Errorf("ExtractMessages: %v ", err)
+		}
 
-	// 	//iterate msg page link-names for current month
-	// 	for _, n := range names {
-	// 		m, err := extractMsg(ctx, url, n)
-	// 		if err != nil {
-	// 			log.Printf("extract message error: %v url: %s, name: %s", err, url, n)
-	// 		} else {
-	// 			msgs = append(msgs, m)
-	// 		}
-	// 	}
-	// }
-	// return msgs, nil
-	return nil, nil
+		for _, n := range parseMsgNames(namesPage) {
+			lnk, err := url.JoinPath(monthLink, n)
+			if err != nil {
+				return nil, fmt.Errorf("ExtractMessages: %v", err)
+			}
+			links <- lnk
+		}
+	}
+	close(links)
+	wg.Wait()
+
+	return msgs, nil
 }
 
-func extractMsg(ctx context.Context, dir string, name string) (m *seismo.Message, err error) {
+func extractMsg(ctx context.Context, url string) (m *seismo.Message, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("extractMsg: %w", err)
 		}
 	}()
 
-	sm, err := getMsgPage(ctx, dir, name, nil)
+	sm, err := getMsgPage(ctx, url, nil)
 	if err != nil {
 		return nil, err
 	}
