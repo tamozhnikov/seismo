@@ -34,7 +34,8 @@ func Test_extractMsg(t *testing.T) {
 
 func Test_ExtractMessages(t *testing.T) {
 	ext := NewExtractor("", 0)
-	msgs, err := ext.ExtractMessages(context.Background(), seismo.MonthYear{2, 2023}, seismo.MonthYear{2, 2023}, 7)
+	msgs, err := ext.ExtractMessages(context.Background(),
+		seismo.MonthYear{Month: 2, Year: 2023}, seismo.MonthYear{Month: 2, Year: 2023}, 7)
 	if err != nil {
 		t.Fatalf("ExtractMessages: error: %v", err)
 	}

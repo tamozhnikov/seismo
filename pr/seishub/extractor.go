@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"seismo"
+	"sort"
 	"sync"
 	"time"
 )
@@ -50,12 +51,25 @@ func NewExtractor(baseAddr string, timeout time.Duration) *Extractor {
 // Watch starts monitoring the appearance of new messages on SEISHUB
 // and extracting such messages (message information).
 // Returns a channel for getting new messages.
-func (e *Extractor) Watch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
+func (e *Extractor) NewWatcher(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
 	ch := make(chan seismo.Message)
 	go func() {
 		//TO DO: this function watches the seishub, extracts new messages and send them into the channel
+		tick := time.NewTicker(checkPeriod).C
+		for {
+			select {
+			case <-tick:
+				ch <- checkNewMsg()
+			case <-ctx.Done():
+				return
+			}
+		}
 	}()
 	return ch, nil
+}
+
+func checkNewMsg() seismo.Message {
+	return seismo.Message{}
 }
 
 // ExtractMessages returns seismic messages extracted from SEISHUB.
@@ -114,6 +128,9 @@ func (e *Extractor) ExtractMessages(ctx context.Context, from seismo.MonthYear, 
 	close(links)
 	wg.Wait()
 
+	sort.Slice(msgs, func(i, j int) bool {
+		return msgs[i].FocusTime.Before(msgs[j].FocusTime)
+	})
 	return msgs, nil
 }
 
