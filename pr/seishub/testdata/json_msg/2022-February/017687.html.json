@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dezrru",
  "focus_time": "2022-02-15T05:01:49.236Z",
  "latitude": 51.15,
  "longitude": 93.31,
  "magnitude": 5.4,
- "event_type": "",
- "quality": "хорошо"
+ "event_id": "asb2022dezrru",
+ "event_type": 0,
+ "quality": 2,
+ "link": ""
 }

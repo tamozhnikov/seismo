@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dtuhir",
  "focus_time": "2022-02-23T06:26:04.43Z",
  "latitude": 48.08,
  "longitude": 87.13,
  "magnitude": 3.2,
- "event_type": "earthquake",
- "quality": "наилучшее, обработано аналитиком"
+ "event_id": "asb2022dtuhir",
+ "event_type": 1,
+ "quality": 3,
+ "link": ""
 }

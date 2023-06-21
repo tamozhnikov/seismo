@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dqienk",
  "focus_time": "2022-02-21T09:07:18.665Z",
  "latitude": 59.82,
  "longitude": 93.3,
  "magnitude": 4.7,
- "event_type": "",
- "quality": "предварительная оценка"
+ "event_id": "asb2022dqienk",
+ "event_type": 0,
+ "quality": 1,
+ "link": ""
 }

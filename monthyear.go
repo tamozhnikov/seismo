@@ -6,18 +6,6 @@ import (
 	"time"
 )
 
-// Message represents contains common information about seismic event
-type Message struct {
-	EventId   string    `json:"event_id"`
-	FocusTime time.Time `json:"focus_time"`
-	Latitude  float64   `json:"latitude"`
-	Longitude float64   `json:"longitude"`
-	//Depth     float64   `json:"depth"`
-	Magnitude float64 `json:"magnitude"`
-	EventType string  `json:"event_type"`
-	Quality   string  `json:"quality"`
-}
-
 // MonthYear represents a month of a year
 type MonthYear struct {
 	Month time.Month
@@ -44,19 +32,22 @@ func (m *MonthYear) After(u MonthYear) bool {
 }
 
 // AddMonth adds n months to the MonthYear instant value
-func (m *MonthYear) AddMonth(n int) {
-	m.Year += n / 12
+func (m *MonthYear) AddMonth(n int) MonthYear {
+	res := *m
+	res.Year += n / 12
 	md := int(m.Month) + n%12
 	switch {
 	case md > 12:
-		m.Year++
-		m.Month = time.Month(md - 12)
+		res.Year++
+		res.Month = time.Month(md - 12)
 	case md <= 0:
-		m.Year--
-		m.Month = time.Month(12 + md)
+		res.Year--
+		res.Month = time.Month(12 + md)
 	default:
-		m.Month = time.Month(md)
+		res.Month = time.Month(md)
 	}
+
+	return res
 }
 
 // Diff returns difference in months. A returned value is negative if u is after m.

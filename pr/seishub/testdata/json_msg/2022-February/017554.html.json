@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022chegsa",
  "focus_time": "2022-02-02T05:32:31.48Z",
  "latitude": -27.77,
  "longitude": -175.99,
  "magnitude": 5.7,
- "event_type": "",
- "quality": "хорошо"
+ "event_id": "asb2022chegsa",
+ "event_type": 0,
+ "quality": 2,
+ "link": ""
 }

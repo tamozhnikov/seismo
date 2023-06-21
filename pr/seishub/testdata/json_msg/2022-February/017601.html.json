@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022cpxkyd",
  "focus_time": "2022-02-06T23:46:22.515Z",
  "latitude": -21.89,
  "longitude": -68.38,
  "magnitude": 0,
- "event_type": "",
- "quality": "хорошо"
+ "event_id": "asb2022cpxkyd",
+ "event_type": 0,
+ "quality": 2,
+ "link": ""
 }

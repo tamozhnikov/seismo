@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022csfgpp",
  "focus_time": "2022-02-08T05:51:48.16Z",
  "latitude": 50.94,
  "longitude": 88.06,
  "magnitude": 1.5,
- "event_type": "earthquake",
- "quality": "наилучшее, обработано аналитиком"
+ "event_id": "asb2022csfgpp",
+ "event_type": 1,
+ "quality": 3,
+ "link": ""
 }

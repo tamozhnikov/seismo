@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022drydbd",
  "focus_time": "2022-02-22T06:12:48.709Z",
  "latitude": -22.64,
  "longitude": -65.99,
  "magnitude": 0,
- "event_type": "",
- "quality": "хорошо"
+ "event_id": "asb2022drydbd",
+ "event_type": 0,
+ "quality": 2,
+ "link": ""
 }

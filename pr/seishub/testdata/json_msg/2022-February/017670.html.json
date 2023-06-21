@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dbxper",
  "focus_time": "2022-02-13T12:45:01.48Z",
  "latitude": 51.24,
  "longitude": 100.3,
  "magnitude": 4.6,
- "event_type": "earthquake",
- "quality": "наилучшее, обработано аналитиком"
+ "event_id": "asb2022dbxper",
+ "event_type": 1,
+ "quality": 3,
+ "link": ""
 }

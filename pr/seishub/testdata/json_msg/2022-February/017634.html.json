@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022cvacal",
  "focus_time": "2022-02-09T18:29:02.214Z",
  "latitude": -21.42,
  "longitude": -176.95,
  "magnitude": 5.5,
- "event_type": "",
- "quality": "хорошо"
+ "event_id": "asb2022cvacal",
+ "event_type": 0,
+ "quality": 2,
+ "link": ""
 }

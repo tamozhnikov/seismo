@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022deirgc",
  "focus_time": "2022-02-14T20:28:21.534Z",
  "latitude": 70.87,
  "longitude": -14.17,
  "magnitude": 5.9,
- "event_type": "",
- "quality": "хорошо"
+ "event_id": "asb2022deirgc",
+ "event_type": 0,
+ "quality": 2,
+ "link": ""
 }

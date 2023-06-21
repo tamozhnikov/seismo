@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_MonthYear_After(t *testing.T) {
+func Test_After(t *testing.T) {
 	tests := []struct {
 		base MonthYear
 		arg  MonthYear
@@ -29,7 +29,7 @@ func Test_MonthYear_After(t *testing.T) {
 	}
 }
 
-func Test_MonthYear_AddMonth(t *testing.T) {
+func Test_AddMonth(t *testing.T) {
 	tests := []struct {
 		base MonthYear
 		arg  int
@@ -60,13 +60,13 @@ func Test_MonthYear_AddMonth(t *testing.T) {
 
 	for _, test := range tests {
 		preBase := test.base
-		if test.base.AddMonth(test.arg); test.base != test.want {
+		if test.base = test.base.AddMonth(test.arg); test.base != test.want {
 			t.Errorf("Test MonthYear.AddMonth: base: %v, arg: %d, want: %v, res: %v", preBase, test.arg, test.want, test.base)
 		}
 	}
 }
 
-func Test_MonthYear_Diff(t *testing.T) {
+func Test_Diff(t *testing.T) {
 	tests := []struct {
 		base MonthYear
 		arg  MonthYear

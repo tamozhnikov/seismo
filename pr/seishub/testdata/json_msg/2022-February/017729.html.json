@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dogfkp",
  "focus_time": "2022-02-20T05:59:03.533Z",
  "latitude": 53.83,
  "longitude": 90.39,
  "magnitude": 3.3,
- "event_type": "",
- "quality": "удовлетворительно"
+ "event_id": "asb2022dogfkp",
+ "event_type": 0,
+ "quality": 0,
+ "link": ""
 }

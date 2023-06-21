@@ -10,6 +10,7 @@ import (
 	"seismo"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -76,7 +77,7 @@ func Test_parseMsgNames(t *testing.T) {
 		"021138.html",
 	}
 
-	res := parseMsgNames(input)
+	res := ParseMsgNames(input)
 
 	if len(res) != len(want) {
 		t.Fail()
@@ -137,7 +138,7 @@ func Test_getMsgPage(t *testing.T) {
 	}
 
 	want := string(c)
-	res, err := getMsgPage(context.Background(), input.url, nil)
+	res, err := GetMsgPage(context.Background(), input.url, nil)
 	if err != nil {
 		t.Errorf("\ngetMsgPage: \n\t error: %v", err)
 	}
@@ -185,6 +186,32 @@ func Test_ParseMsg(t *testing.T) {
 		if *resultMsg != wantMsg {
 			t.Errorf("\nParseMsg: \twant: %v\n\t result: %v\n", wantMsg, *resultMsg)
 		}
+	}
+}
+
+func Test_GetMsg(t *testing.T) {
+	input := struct {
+		url string
+	}{
+		"http://seishub.ru/pipermail/seismic-report/2023-March/021128.html",
+	}
+
+	want := seismo.Message{EventId: "asb2023eesfwx"}
+	want.FocusTime, _ = time.Parse("2006.01.02 03:04:05", "2023.03.01 05:13:16.43")
+	want.Latitude = 54.71
+	want.Longitude = 83.67
+	want.Magnitude = 3.3
+	want.Type = seismo.QuarryBlast
+	want.Quality = seismo.Excellent
+	want.Link = "http://seishub.ru/pipermail/seismic-report/2023-March/021128.html"
+
+	res, err := GetMsg(context.Background(), input.url, nil)
+	if err != nil {
+		t.Errorf("Test_extractMsg: \n\t error: %v", err)
+	}
+
+	if res == nil || *res != want {
+		t.Errorf("extractMsg: \n\t result != want")
 	}
 }
 

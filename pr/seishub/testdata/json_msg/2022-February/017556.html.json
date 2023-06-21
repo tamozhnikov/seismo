@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022chhlwj",
  "focus_time": "2022-02-02T07:10:16.93Z",
  "latitude": 54.41,
  "longitude": 86.85,
  "magnitude": 2.6,
- "event_type": "quarry blast",
- "quality": "наилучшее, обработано аналитиком"
+ "event_id": "asb2022chhlwj",
+ "event_type": 2,
+ "quality": 3,
+ "link": ""
 }

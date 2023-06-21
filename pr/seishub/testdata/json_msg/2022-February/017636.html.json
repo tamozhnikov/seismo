@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022cvdamb",
  "focus_time": "2022-02-09T19:57:45.81Z",
  "latitude": 48.62,
  "longitude": 89.6,
  "magnitude": 3.1,
- "event_type": "earthquake",
- "quality": "наилучшее, обработано аналитиком"
+ "event_id": "asb2022cvdamb",
+ "event_type": 1,
+ "quality": 3,
+ "link": ""
 }

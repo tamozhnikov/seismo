@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022claora",
  "focus_time": "2022-02-04T07:58:57.678Z",
  "latitude": 59.56,
  "longitude": 99.79,
  "magnitude": 4.4,
- "event_type": "",
- "quality": "предварительная оценка"
+ "event_id": "asb2022claora",
+ "event_type": 0,
+ "quality": 1,
+ "link": ""
 }

@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022eddame",
  "focus_time": "2022-02-28T08:29:56.116Z",
  "latitude": 54.26,
  "longitude": 86.52,
  "magnitude": 1.9,
- "event_type": "",
- "quality": "предварительная оценка"
+ "event_id": "asb2022eddame",
+ "event_type": 0,
+ "quality": 1,
+ "link": ""
 }

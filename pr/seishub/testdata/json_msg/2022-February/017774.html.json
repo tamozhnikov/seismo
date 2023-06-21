@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dxossa",
  "focus_time": "2022-02-25T07:56:07.52Z",
  "latitude": 53.77,
  "longitude": 88.17,
  "magnitude": 2.6,
- "event_type": "",
- "quality": "предварительная оценка"
+ "event_id": "asb2022dxossa",
+ "event_type": 0,
+ "quality": 1,
+ "link": ""
 }

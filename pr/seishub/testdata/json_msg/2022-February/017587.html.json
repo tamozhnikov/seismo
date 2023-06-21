@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022clclev",
  "focus_time": "2022-02-04T08:55:16.729Z",
  "latitude": 54.28,
  "longitude": 86.07,
  "magnitude": 2.3,
- "event_type": "",
- "quality": "предварительная оценка"
+ "event_id": "asb2022clclev",
+ "event_type": 0,
+ "quality": 1,
+ "link": ""
 }

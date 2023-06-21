@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dogfkp",
  "focus_time": "2022-02-20T05:58:58.39Z",
  "latitude": 53.71,
  "longitude": 90.18,
  "magnitude": 3.3,
- "event_type": "earthquake",
- "quality": "наилучшее, обработано аналитиком"
+ "event_id": "asb2022dogfkp",
+ "event_type": 1,
+ "quality": 3,
+ "link": ""
 }

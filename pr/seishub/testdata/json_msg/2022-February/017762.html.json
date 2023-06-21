@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dseabu",
  "focus_time": "2022-02-22T09:04:59.722Z",
  "latitude": 64.01,
  "longitude": 142.96,
  "magnitude": 5.5,
- "event_type": "",
- "quality": "предварительная оценка"
+ "event_id": "asb2022dseabu",
+ "event_type": 0,
+ "quality": 1,
+ "link": ""
 }

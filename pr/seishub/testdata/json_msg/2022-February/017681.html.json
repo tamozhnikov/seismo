@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022ddkult",
  "focus_time": "2022-02-14T08:27:58.074Z",
  "latitude": 53.19,
  "longitude": 92.9,
  "magnitude": 4.1,
- "event_type": "",
- "quality": "предварительная оценка"
+ "event_id": "asb2022ddkult",
+ "event_type": 0,
+ "quality": 1,
+ "link": ""
 }

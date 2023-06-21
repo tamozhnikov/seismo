@@ -62,12 +62,12 @@ func main() {
 	}
 
 	if *outFlag == "" {
-		fmt.Printf("The value of the out flag is not specified.The default value \"%s\" will be used.\n", defOutDir)
+		fmt.Printf("The value of the \"out\" flag is not specified.The default value \"%s\" will be used.\n", defOutDir)
 		*outFlag = path.Join(path.Dir(ep), defOutDir)
 	}
 
 	if *inFlag == "" {
-		fmt.Printf("The value of \"in\" flag is not specified. The folder of the executable will be used.\n")
+		fmt.Printf("The value of the \"in\" flag is not specified. The folder of the executable will be used.\n")
 		*inFlag = ep
 	}
 
@@ -127,6 +127,7 @@ func parseMsgFiles(inputDir, saveDir string) error {
 			log.Printf("Skiping. Cannot parse \"%s\": %v\n", f.Name(), err)
 			continue
 		}
+		//msg.Link = f.Name()
 
 		js, err := json.MarshalIndent(msg, "", " ")
 		if err != nil {

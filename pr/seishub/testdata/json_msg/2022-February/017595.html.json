@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022cmoxmg",
  "focus_time": "2022-02-05T04:16:09.45Z",
  "latitude": 37.15,
  "longitude": 71.51,
  "magnitude": 5.9,
- "event_type": "",
- "quality": "хорошо"
+ "event_id": "asb2022cmoxmg",
+ "event_type": 0,
+ "quality": 2,
+ "link": ""
 }

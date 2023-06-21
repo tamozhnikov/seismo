@@ -1,9 +1,10 @@
 {
- "event_id": "asb2022dokejm",
  "focus_time": "2022-02-20T07:58:31.71Z",
  "latitude": 47.04,
  "longitude": 84.57,
  "magnitude": 3.6,
- "event_type": "earthquake",
- "quality": "наилучшее, обработано аналитиком"
+ "event_id": "asb2022dokejm",
+ "event_type": 1,
+ "quality": 3,
+ "link": ""
 }
