@@ -16,6 +16,14 @@ import (
 
 var defClient = http.Client{Timeout: 60 * time.Second}
 
+type NotFoundErr struct {
+	link string
+}
+
+func (e NotFoundErr) Error() string {
+	return fmt.Sprintf("Not found %s", e.link)
+}
+
 func GetMsgPages(ctx context.Context, dir string) (map[string]string, error) {
 	namesPage, err := GetMsgNamesPage(ctx, dir, nil)
 	if err != nil {
@@ -47,22 +55,22 @@ func GetMsgNamesPage(ctx context.Context, link string, cl *http.Client) (string,
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, link, nil)
 	if err != nil {
-		return "", fmt.Errorf("GetMsgNamesPage: \"%s\": %w", link, err)
+		return "", fmt.Errorf("GetMsgNamesPage: link: %q error: %w", link, err)
 	}
 	resp, err := cl.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("GetMsgNamesPage: \"%s\": %w", link, err)
+		return "", fmt.Errorf("GetMsgNamesPage: link: %q error: %w", link, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("GetMsgNamesPage: \"%s\": %s", link, resp.Status)
+		return "", fmt.Errorf("GetMsgNamesPage: error: %w", NotFoundErr{link: link})
 	}
 
 	buf := new(strings.Builder)
 	_, err = io.Copy(buf, resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("GetMsgNamesPage: copy response body \"%s\": %w", link, err)
+		return "", fmt.Errorf("GetMsgNamesPage: copy response body \"%s\" error: %w", link, err)
 	}
 
 	return buf.String(), nil
@@ -94,17 +102,17 @@ func GetMsgPage(ctx context.Context, link string, cl *http.Client) (string, erro
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, link, nil)
 	if err != nil {
-		return "", fmt.Errorf("getMsgPage: url %q: %w", link, err)
+		return "", fmt.Errorf("getMsgPage: link: %q error: %w", link, err)
 	}
 
 	resp, err := cl.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("getMsgPage: get %q: %w", link, err)
+		return "", fmt.Errorf("getMsgPage: link: %q error: %w", link, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("getMsgPage: get %q: %s", link, resp.Status)
+		return "", fmt.Errorf("getMsgPage: error: %w", NotFoundErr{link: link})
 	}
 
 	buf := new(strings.Builder)

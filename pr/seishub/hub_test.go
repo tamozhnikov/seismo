@@ -13,7 +13,7 @@ import (
 func Test_ExtractMessages(t *testing.T) {
 	ext := NewHub("", 0)
 	msgs, err := ext.Extract(context.Background(),
-		seismo.MonthYear{Month: 2, Year: 2023}, seismo.MonthYear{Month: 2, Year: 2023}, 7)
+		seismo.MonthYear{Month: 6, Year: 2023}, seismo.MonthYear{Month: 7, Year: 2023}, 7)
 	if err != nil {
 		t.Fatalf("ExtractMessages: error: %v", err)
 	}
@@ -85,6 +85,24 @@ func Test_parseMsgNum(t *testing.T) {
 			t.Errorf("parseMsgNum: s: %s, want: %d, res: %d, error: %v", test.s, test.want, res, err)
 		} else if err != nil {
 			t.Logf("parseMsgNum: s: %s, want: %d, res: %d, error: %v", test.s, test.want, res, err)
+		}
+	}
+}
+
+func Test_msgNumToName(t *testing.T) {
+	tests := []struct {
+		n    int
+		want string
+	}{
+		{0, "000000.html"},
+		{1, "000001.html"},
+		{23423, "023423.html"},
+	}
+
+	for _, test := range tests {
+		res := msgNumToName(test.n)
+		if res != test.want {
+			t.Errorf("n: %d res: %s want: %s", test.n, res, test.want)
 		}
 	}
 }

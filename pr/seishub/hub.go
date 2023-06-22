@@ -2,6 +2,7 @@ package seishub
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -47,6 +48,10 @@ func newStoppedState(h *Hub) *stoppedState {
 
 func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
 	from = from.UTC()
+	now := time.Now().UTC()
+	if from.After(now) {
+		return nil, fmt.Errorf(`Watching cannot be started in the future (the "from" arg cannot after the start time)`)
+	}
 	h := s.hub
 	h.setState(newRunState(s.hub))
 	o := make(chan seismo.Message)
@@ -137,15 +142,16 @@ func (h *Hub) watch(ctx context.Context, o chan<- seismo.Message, sn <-chan int,
 	defer wt.Stop()
 
 	month := seismo.MonthYear{Month: from.Month(), Year: from.Year()}
-	//nextMonth := month.AddMonth(1)
 	for {
 		select {
 		case <-wt.C:
 			msg, err := h.checkMsg(ctx, &msgNum, &month)
 			if err != nil {
 				log.Printf("watch: %v\n", err)
+
+			} else if msg != nil {
+				o <- *msg
 			}
-			o <- *msg
 		case <-ctx.Done():
 			log.Println("watch: Canceled")
 		}
@@ -154,39 +160,41 @@ func (h *Hub) watch(ctx context.Context, o chan<- seismo.Message, sn <-chan int,
 }
 
 func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *seismo.MonthYear) (*seismo.Message, error) {
-	// nowTime := time.Now().UTC()                                                //Now time
-	// nowMonth := seismo.MonthYear{Month: nowTime.Month(), Year: nowTime.Year()} //Now month
+	msgName := msgNumToName(*msgNum)
+	l, err := url.JoinPath(h.BaseAddr, MonthYearPathSeg(month.Month, month.Year), msgName)
+	if err != nil {
+		return nil, fmt.Errorf("checkMsg: %w", err)
+	}
 
-	// monthLink, err := url.JoinPath(h.BaseAddr, MonthYearPathSeg(month.Month, month.Year))
-	// if err != nil {
-	// 	return nil, fmt.Errorf("checkMsg: %w", err)
-	// }
-	// msgNames, err := GetMsgNames(ctx, monthLink, &h.Client)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("checkMsg:  monthLink: %s error:  %w", monthLink, err)
-	// }
+	msg, err := GetMsg(ctx, l, &h.Client)
+	if err == nil { //err is EQUAL nil !!! Getting is succeful
+		*msgNum++
+		return msg, nil
+	}
 
-	//msgNums, err := parseMsgNumbers(msgNames)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("checkMsg:  %w", err)
-	// }
+	if !errors.As(err, &NotFoundErr{}) { //all errors except NotFoundErr
+		return nil, err
+	}
 
-	// if *msgNum < len(msgNames) {
-	// 	msgLink, err := url.JoinPath(monthLink, msgNames[*msgNum])
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("checkMsg: %w", err)
-	// 	}
-	// 	msg, err := GetMsg(ctx, msgLink, &h.Client)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("checkMsg: msgLink: %s error: %w", msgLink, err)
-	// 	}
-	// 	*msgNum++
-	// 	return msg, nil
-	// } else if nowMonth.After(*month) {
-	// 	*msgNum = 0
-	// 	*month = month.AddMonth(1)
-	// }
+	//NotFound error: check next month
+	nextMonth := month.AddMonth(1)
+	l, err = url.JoinPath(h.BaseAddr, MonthYearPathSeg(nextMonth.Month, nextMonth.Year), msgName)
+	if err != nil {
+		return nil, fmt.Errorf("checkMsg: %w", err)
+	}
 
+	msg, err = GetMsg(ctx, l, &h.Client)
+	if err == nil { //err is EQUAL nil !!! a message has been found in the next month
+		*msgNum++
+		*month = nextMonth //move to the next month
+		return msg, nil
+	}
+
+	if !errors.As(err, &NotFoundErr{}) { //all errors except NotFoundErr
+		return nil, err
+	}
+
+	//The message has not been found
 	return nil, nil
 }
 
@@ -258,7 +266,7 @@ func (e *Hub) Extract(ctx context.Context,
 	}
 
 	//Result slice of messages
-	msgs := make([]*seismo.Message, avgMonthMsgNum*monthNum)
+	msgs := make([]*seismo.Message, 0, avgMonthMsgNum*monthNum)
 	links := make(chan string)
 
 	var wg sync.WaitGroup
@@ -271,7 +279,7 @@ func (e *Hub) Extract(ctx context.Context,
 			for l := range links {
 				msg, err := GetMsg(ctx, l, &e.Client)
 				if err != nil {
-					log.Printf("Extract: %v url: %s", err, l)
+					log.Printf("Extract: link: %q error: %v", l, err)
 				} else {
 					msgs = append(msgs, msg)
 				}
@@ -283,12 +291,15 @@ func (e *Hub) Extract(ctx context.Context,
 		sg := MonthYearPathSeg(m.Month, m.Year)
 		monthLink, err := url.JoinPath(e.BaseAddr, sg)
 		if err != nil {
-			return nil, fmt.Errorf("Extract: %v", err)
+			return nil, fmt.Errorf("Extract: %v ", err)
 		}
 
 		names, err := GetMsgNames(ctx, monthLink, &e.Client)
-		if err != nil {
-			return nil, fmt.Errorf("Extract: %v ", err)
+		if err != nil && errors.As(err, &NotFoundErr{}) {
+			log.Printf("Extract: %v", err)
+			continue
+		} else if err != nil {
+			return nil, fmt.Errorf("Extract: %v", err)
 		}
 
 		for _, n := range names {
@@ -335,4 +346,10 @@ func parseMsgNumbers(ss []string) ([]int, error) {
 	})
 
 	return nums, nil
+}
+
+func msgNumToName(n int) string {
+	//n = int(math.Abs(float64(n)))
+	s := strconv.Itoa(n)
+	return strings.Repeat("0", 6-len(s)) + s + ".html"
 }
