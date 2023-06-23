@@ -1,5 +1,8 @@
-.DEFAULT_GOAL := shu-build
+.DEFAULT_GOAL := collector #shu-build
 
+collector:
+	go build -o bin/collector/collector cmd/collector/main.go
+.PHONY: collector
 
 #seishub-util
 shu-build: #sh-fmt sh-vet
