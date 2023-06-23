@@ -348,8 +348,12 @@ func parseMsgNumbers(ss []string) ([]int, error) {
 	return nums, nil
 }
 
+// msgNumToName creates a message page name like "000234.html"
+// It panics if n is less than 0 or has more than 6 digits
 func msgNumToName(n int) string {
-	//n = int(math.Abs(float64(n)))
+	if n < 0 {
+		panic("msgNumToName: the n arg is less than 0")
+	}
 	s := strconv.Itoa(n)
 	return strings.Repeat("0", 6-len(s)) + s + ".html"
 }
