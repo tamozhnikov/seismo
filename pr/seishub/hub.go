@@ -232,24 +232,36 @@ func (h *Hub) getStartMsgNum(ctx context.Context, sn chan<- int, from time.Time,
 }
 
 func findStartMsgNum(msgs []*seismo.Message, from time.Time) (int, error) {
-	sort.Slice(msgs, func(i, j int) bool {
-		return msgs[i].FocusTime.Before(msgs[j].FocusTime)
-	})
+	//Create a meta-slice ordered by a message number (parsed from the link)
+	//and find the first message with focus time more than the "from" arg
+	//This logic is neccesary because the seishub DOESN'T ENSURE that a message
+	//about a later event has a higher number
 
-	i := sort.Search(len(msgs), func(i int) bool {
-		return msgs[i].FocusTime.After(from) || msgs[i].FocusTime.Equal(from)
-	})
-
-	if i == len(msgs) {
-		i = len(msgs) - 1
+	type meta struct {
+		num       int
+		focusTime time.Time
 	}
 
-	n, err := parseMsgNum(msgs[i].Link)
-	if err != nil {
-		return 0, fmt.Errorf("findStartMsgNum: %w", err)
+	ind := make([]*meta, 0, len(msgs))
+	for _, m := range msgs {
+		n, err := parseMsgNum(m.Link)
+		if err != nil {
+			return 0, fmt.Errorf("findStartMsgNum: %w", err)
+		}
+		ind = append(ind, &meta{num: n, focusTime: m.FocusTime})
 	}
 
-	return n, nil
+	sort.Slice(ind, func(i, j int) bool {
+		return ind[i].num < ind[j].num
+	})
+
+	for _, v := range ind {
+		if v.focusTime.After(from) || v.focusTime.Equal(from) {
+			return v.num, nil
+		}
+	}
+
+	return ind[len(ind)-1].num, nil
 }
 
 // Extract returns seismic messages extracted from SEISHUB.

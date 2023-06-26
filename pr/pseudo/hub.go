@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"math/rand"
 	"seismo"
-	"strconv"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type hubState interface {
@@ -113,7 +114,7 @@ func createRandMsgs() []seismo.Message {
 	num := rand.Intn(3) + 1
 	msgs := make([]seismo.Message, 0, num)
 
-	id := strconv.Itoa(rand.Int())
+	id := uuid.New().String()
 	lat := rand.Float64()*20.0 + 40.0
 	long := rand.Float64()*30.0 + 70.0
 	mag := rand.Float64()*6.0 + 0.1

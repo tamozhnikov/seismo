@@ -8,6 +8,7 @@ import (
 	"path"
 	"seismo"
 	"testing"
+	"time"
 )
 
 func Test_ExtractMessages(t *testing.T) {
@@ -45,24 +46,32 @@ func Test_findStartMsgNum(t *testing.T) {
 		if err = json.Unmarshal(inputBuf, &m); err != nil {
 			t.Fatalf("\nCannot unmarshal \"%s\"; error: %v", f.Name()+".json", err)
 		}
+		m.Link = f.Name()
 
 		msgs = append(msgs, &m)
 	}
 
-	// tests := []struct {
-	// 	from time.Time
-	// 	want int
-	// }{
-	// 	{time.Date(2022, 2, 1, 5, 56, 0, 0, time.UTC), 0},
-	// }
+	tests := []struct {
+		from time.Time
+		want int
+	}{
+		{time.Date(2022, 2, 1, 5, 55, 10, 0, time.UTC), 17538},
+		{time.Date(2022, 2, 1, 5, 55, 12, 0, time.UTC), 17538},
+		{time.Date(2022, 2, 1, 5, 56, 0, 0, time.UTC), 17541},
+		{time.Date(2022, 2, 28, 7, 23, 20, 0, time.UTC), 17791},
+		{time.Date(2022, 2, 28, 12, 00, 0, 0, time.UTC), 17801},
+	}
 
-	// for _, tst := range tests {
-	// 	res := findStartMsgNum(msgs, tst.from)
-	// 	if res != tst.want {
-	// 		t.Errorf("findStartMsgNum: from: %v want: %d res:%d", tst.from, tst.want, res)
-	// 	}
-	// }
-	//find00
+	for _, tst := range tests {
+		res, err := findStartMsgNum(msgs, tst.from)
+		if err != nil {
+			t.Errorf("fincStartMsgNum: error: %v", err)
+		}
+		if res != tst.want {
+			t.Errorf("findStartMsgNum: from: %v want: %d res:%d", tst.from, tst.want, res)
+		}
+	}
+
 }
 
 func Test_parseMsgNum(t *testing.T) {
