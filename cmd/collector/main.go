@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"seismo"
-	"seismo/pr/pseudo"
+	"seismo/provider/pseudo"
 	"time"
 )
 

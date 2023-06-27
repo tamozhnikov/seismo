@@ -11,7 +11,7 @@ import (
 	"os"
 	"path"
 	"seismo"
-	"seismo/pr/seishub"
+	"seismo/provider/seishub"
 	"time"
 )
 
