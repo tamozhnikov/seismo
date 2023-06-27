@@ -96,7 +96,8 @@ type Hub struct {
 }
 
 // NewHub returns a new SEISHUB Hub in the stopped state for a given basic address (baseAddr)
-// with a specified timeout for the embedded http.Client.
+// with a specified timeout for the embedded http.Client. If the "baseAddr" arg is an empty string
+// or the timeout is 0, default values will be used.
 func NewHub(baseAddr string, timeout time.Duration) *Hub {
 	if baseAddr == "" {
 		baseAddr = defBaseAddr
