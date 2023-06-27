@@ -11,8 +11,9 @@ import (
 // and expected values
 func Test_createRandMsgs(t *testing.T) {
 	//t.Errorf("")
+	h := NewHub("pseudo")
 	for i := 0; i < 10; i++ {
-		msgs := createRandMsgs()
+		msgs := h.createRandMsgs()
 
 		for _, m := range msgs {
 			fmt.Println(m)

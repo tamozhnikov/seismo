@@ -88,6 +88,7 @@ func (r *runState) stateInfo() seismo.WatcherStateInfo {
 // and also tracking (watching) the appearance of new messages.
 // Hub embeds an http.Client.
 type Hub struct {
+	id       string
 	BaseAddr string
 	http.Client
 
@@ -98,7 +99,7 @@ type Hub struct {
 // NewHub returns a new SEISHUB Hub in the stopped state for a given basic address (baseAddr)
 // with a specified timeout for the embedded http.Client. If the "baseAddr" arg is an empty string
 // or the timeout is 0, default values will be used.
-func NewHub(baseAddr string, timeout time.Duration) *Hub {
+func NewHub(id string, baseAddr string, timeout time.Duration) *Hub {
 	if baseAddr == "" {
 		baseAddr = defBaseAddr
 	}
@@ -108,9 +109,18 @@ func NewHub(baseAddr string, timeout time.Duration) *Hub {
 	}
 
 	h := &Hub{BaseAddr: baseAddr, Client: http.Client{Timeout: timeout}}
+	h.SetId(id)
 	h.setState(newStoppedState(h))
 
 	return h
+}
+
+func (h *Hub) SetId(id string) {
+	h.id = id
+}
+
+func (h *Hub) GetId() string {
+	return h.id
 }
 
 func (h *Hub) setState(s hubState) {
@@ -167,7 +177,7 @@ func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *seismo.MonthYear
 		return nil, fmt.Errorf("checkMsg: %w", err)
 	}
 
-	msg, err := GetMsg(ctx, l, &h.Client)
+	msg, err := h.getMsgByLink(ctx, l)
 	if err == nil { //err is EQUAL nil !!! Getting is succeful
 		*msgNum++
 		return msg, nil
@@ -184,7 +194,7 @@ func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *seismo.MonthYear
 		return nil, fmt.Errorf("checkMsg: %w", err)
 	}
 
-	msg, err = GetMsg(ctx, l, &h.Client)
+	msg, err = h.getMsgByLink(ctx, l)
 	if err == nil { //err is EQUAL nil !!! a message has been found in the next month
 		*msgNum++
 		*month = nextMonth //move to the next month
@@ -265,8 +275,18 @@ func findStartMsgNum(msgs []*seismo.Message, from time.Time) (int, error) {
 	return ind[len(ind)-1].num, nil
 }
 
+func (h *Hub) getMsgByLink(ctx context.Context, link string) (*seismo.Message, error) {
+	m, err := GetMsg(ctx, link, &h.Client)
+	if err != nil {
+		return nil, fmt.Errorf("getMsgByLink: link %s, error: %w", link, err)
+	}
+	m.SourceId = h.id
+
+	return m, nil
+}
+
 // Extract returns seismic messages extracted from SEISHUB.
-func (e *Hub) Extract(ctx context.Context,
+func (h *Hub) Extract(ctx context.Context,
 	from seismo.MonthYear, to seismo.MonthYear, paral int) ([]*seismo.Message, error) {
 
 	monthNum := to.Diff(from) + 1
@@ -290,7 +310,7 @@ func (e *Hub) Extract(ctx context.Context,
 				wg.Done()
 			}()
 			for l := range links {
-				msg, err := GetMsg(ctx, l, &e.Client)
+				msg, err := h.getMsgByLink(ctx, l)
 				if err != nil {
 					log.Printf("Extract: link: %q error: %v", l, err)
 				} else {
@@ -302,12 +322,12 @@ func (e *Hub) Extract(ctx context.Context,
 
 	for m := from; !m.After(to); m = m.AddMonth(1) {
 		sg := MonthYearPathSeg(m.Month, m.Year)
-		monthLink, err := url.JoinPath(e.BaseAddr, sg)
+		monthLink, err := url.JoinPath(h.BaseAddr, sg)
 		if err != nil {
 			return nil, fmt.Errorf("Extract: %v ", err)
 		}
 
-		names, err := GetMsgNames(ctx, monthLink, &e.Client)
+		names, err := GetMsgNames(ctx, monthLink, &h.Client)
 		if err != nil && errors.As(err, &NotFoundErr{}) {
 			log.Printf("Extract: %v", err)
 			continue
@@ -326,9 +346,6 @@ func (e *Hub) Extract(ctx context.Context,
 	close(links)
 	wg.Wait()
 
-	// sort.Slice(msgs, func(i, j int) bool {
-	// 	return msgs[i].FocusTime.Before(msgs[j].FocusTime)
-	// })
 	return msgs, nil
 }
 

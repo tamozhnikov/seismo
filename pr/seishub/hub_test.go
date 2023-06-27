@@ -12,7 +12,7 @@ import (
 )
 
 func Test_ExtractMessages(t *testing.T) {
-	ext := NewHub("", 0)
+	ext := NewHub("seisub", "", 0)
 	msgs, err := ext.Extract(context.Background(),
 		seismo.MonthYear{Month: 6, Year: 2023}, seismo.MonthYear{Month: 7, Year: 2023}, 7)
 	if err != nil {

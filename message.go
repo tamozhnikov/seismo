@@ -34,6 +34,7 @@ func RandEventQuality() EventQuality {
 
 // Message contains common information about seismic event
 type Message struct {
+	SourceId  string    `json:"source_id"`
 	FocusTime time.Time `json:"focus_time"`
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`

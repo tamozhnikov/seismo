@@ -61,15 +61,25 @@ func (r *runState) stateInfo() seismo.WatcherStateInfo {
 // implementing the seismo.Watcher interface
 // and creating new messages randomly
 type Hub struct {
+	id string
 	//state implements the State pattern
 	state hubState
 }
 
-func NewHub() *Hub {
+func NewHub(id string) *Hub {
 	h := &Hub{}
+	h.SetId(id)
 	h.setState(newStoppedState(h))
 
 	return h
+}
+
+func (h *Hub) SetId(id string) {
+	h.id = id
+}
+
+func (h *Hub) GetId() string {
+	return h.id
 }
 
 func (h *Hub) setState(s hubState) {
@@ -99,7 +109,7 @@ func (h *Hub) generateMessages(ctx context.Context, o chan<- seismo.Message, per
 		if ctx.Err() != nil {
 			return
 		}
-		msgs := createRandMsgs()
+		msgs := h.createRandMsgs()
 		for _, m := range msgs {
 			o <- m
 		}
@@ -109,7 +119,7 @@ func (h *Hub) generateMessages(ctx context.Context, o chan<- seismo.Message, per
 
 // createRandMsgs returns a slice containing 1 to 3 messages
 // with the same EventId
-func createRandMsgs() []seismo.Message {
+func (h *Hub) createRandMsgs() []seismo.Message {
 	rand.Seed(time.Now().UnixNano())
 	num := rand.Intn(3) + 1
 	msgs := make([]seismo.Message, 0, num)
@@ -123,6 +133,7 @@ func createRandMsgs() []seismo.Message {
 
 		m := seismo.Message{}
 
+		m.SourceId = h.GetId()
 		m.FocusTime = time.Now().UTC()
 		m.Latitude = lat + lat*((rand.Float64()-0.5)/100.0)
 		m.Longitude = long + long*((rand.Float64()-0.5)/100.0)
