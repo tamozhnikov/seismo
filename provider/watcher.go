@@ -14,10 +14,9 @@ const (
 )
 
 type Watcher interface {
-	StartWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan Message, error)
+	StartWatch(ctx context.Context, from time.Time) (<-chan Message, error)
 	StateInfo() WatcherStateInfo
-	SetId(id string)
-	GetId() string
+	GetConfig() WatcherConfig
 }
 
 // AlreadyRunErr indicates that a watcher is already running (watching)

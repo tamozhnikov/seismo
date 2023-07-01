@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	//defBaseAddr constant defines the basic default address for SEISHUB
-	defBaseAddr = "http://seishub.ru/pipermail/seismic-report/"
+	//DefConnStr constant defines the basic default address for SEISHUB
+	DefConnStr = "http://seishub.ru/pipermail/seismic-report/"
 
 	//defParal constant defines max number of go routings each of them gets one
 	//message from seishub
@@ -31,7 +31,7 @@ const (
 
 // hubState interface for implementing the STATE DESIGN PATTERN in the Hub structure
 type hubState interface {
-	startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error)
+	startWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error)
 	stateInfo() provider.WatcherStateInfo
 }
 
@@ -44,18 +44,18 @@ func newStoppedState(h *Hub) *stoppedState {
 	return &stoppedState{hub: h}
 }
 
-func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
+func (s *stoppedState) startWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
 	from = from.UTC()
 	now := time.Now().UTC()
 	if from.After(now) {
-		return nil, fmt.Errorf(`Watching cannot be started in the future (the "from" arg cannot after the start time)`)
+		return nil, fmt.Errorf(`watching cannot be started in the future (the "from" arg cannot after the start time)`)
 	}
 	h := s.hub
 	h.setState(newRunState(s.hub))
 	o := make(chan provider.Message)
 	sn := make(chan int, 1)
-	go h.getStartMsgNum(ctx, sn, from, checkPeriod)
-	go h.watch(ctx, o, sn, from, checkPeriod)
+	go h.getStartMsgNum(ctx, sn, from, time.Duration(h.config.CheckPeriod)*time.Second)
+	go h.watch(ctx, o, sn, from, time.Duration(h.config.CheckPeriod)*time.Second)
 
 	return o, nil
 }
@@ -73,7 +73,7 @@ func newRunState(h *Hub) *runState {
 	return &runState{hub: h}
 }
 
-func (r *runState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
+func (r *runState) startWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
 	return nil, provider.AlreadyRunErr{}
 }
 
@@ -86,39 +86,36 @@ func (r *runState) stateInfo() provider.WatcherStateInfo {
 // and also tracking (watching) the appearance of new messages.
 // Hub embeds an http.Client.
 type Hub struct {
-	id       string
-	BaseAddr string
+	config provider.WatcherConfig
 	http.Client
 
 	//state implements the State pattern
 	state hubState
 }
 
-// NewHub returns a new SEISHUB Hub in the stopped state for a given basic address (baseAddr)
-// with a specified timeout for the embedded http.Client. If the "baseAddr" arg is an empty string
-// or the timeout is 0, default values will be used.
-func NewHub(id string, baseAddr string, timeout time.Duration) *Hub {
-	if baseAddr == "" {
-		baseAddr = defBaseAddr
+// NewHub returns a new SEISHUB Hub in the stopped state
+func NewHub(conf provider.WatcherConfig) (*Hub, error) {
+	if conf.CheckPeriod < 1 {
+		return nil, fmt.Errorf("NewHub: checkperiod cannot be less than 1 (second)")
 	}
 
-	if timeout == 0 {
-		timeout = 60 * time.Second
+	if conf.Timeout < 1 {
+		return nil, fmt.Errorf("NewHub: timeout cannot be less than 1 (second)")
 	}
 
-	h := &Hub{BaseAddr: baseAddr, Client: http.Client{Timeout: timeout}}
-	h.SetId(id)
+	if conf.ConnStr == "" {
+		conf.ConnStr = DefConnStr
+	}
+
+	h := &Hub{config: conf, Client: http.Client{Timeout: time.Duration(conf.Timeout) * time.Second}}
+
 	h.setState(newStoppedState(h))
 
-	return h
+	return h, nil
 }
 
-func (h *Hub) SetId(id string) {
-	h.id = id
-}
-
-func (h *Hub) GetId() string {
-	return h.id
+func (h *Hub) GetConfig() provider.WatcherConfig {
+	return h.config
 }
 
 func (h *Hub) setState(s hubState) {
@@ -135,8 +132,8 @@ func (h *Hub) StateInfo() provider.WatcherStateInfo {
 // Can start watching only in the current month or before.
 // Watching can't be started in future months.
 // Returns an error in such case.
-func (h *Hub) StartWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
-	o, err := h.state.startWatch(ctx, from, checkPeriod)
+func (h *Hub) StartWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
+	o, err := h.state.startWatch(ctx, from)
 	return o, err
 }
 
@@ -170,7 +167,7 @@ func (h *Hub) watch(ctx context.Context, o chan<- provider.Message, sn <-chan in
 
 func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *provider.MonthYear) (*provider.Message, error) {
 	msgName := msgNumToName(*msgNum)
-	l, err := url.JoinPath(h.BaseAddr, MonthYearPathSeg(month.Month, month.Year), msgName)
+	l, err := url.JoinPath(h.config.ConnStr, MonthYearPathSeg(month.Month, month.Year), msgName)
 	if err != nil {
 		return nil, fmt.Errorf("checkMsg: %w", err)
 	}
@@ -187,7 +184,7 @@ func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *provider.MonthYe
 
 	//NotFound error: check next month
 	nextMonth := month.AddMonth(1)
-	l, err = url.JoinPath(h.BaseAddr, MonthYearPathSeg(nextMonth.Month, nextMonth.Year), msgName)
+	l, err = url.JoinPath(h.config.ConnStr, MonthYearPathSeg(nextMonth.Month, nextMonth.Year), msgName)
 	if err != nil {
 		return nil, fmt.Errorf("checkMsg: %w", err)
 	}
@@ -278,7 +275,7 @@ func (h *Hub) getMsgByLink(ctx context.Context, link string) (*provider.Message,
 	if err != nil {
 		return nil, fmt.Errorf("getMsgByLink: link %s, error: %w", link, err)
 	}
-	m.SourceId = h.id
+	m.SourceId = h.config.Id
 
 	return m, nil
 }
@@ -320,7 +317,7 @@ func (h *Hub) Extract(ctx context.Context,
 
 	for m := from; !m.After(to); m = m.AddMonth(1) {
 		sg := MonthYearPathSeg(m.Month, m.Year)
-		monthLink, err := url.JoinPath(h.BaseAddr, sg)
+		monthLink, err := url.JoinPath(h.config.ConnStr, sg)
 		if err != nil {
 			return nil, fmt.Errorf("Extract: %v ", err)
 		}

@@ -14,6 +14,7 @@ bin/
 
 #IDE files
 .vscode/
+.VSCodeCounter/
 
 
 

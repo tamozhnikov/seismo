@@ -8,7 +8,6 @@ import (
 	"seismo/collector/db"
 	"seismo/provider"
 	"seismo/provider/crt"
-	"time"
 )
 
 func main() {
@@ -53,11 +52,12 @@ func createWatchers(conf collector.Config) (map[string]provider.Watcher, error) 
 			return nil, fmt.Errorf("createWatchers: %w", err)
 		}
 
-		if _, ok := watchers[w.GetId()]; ok {
+		id := w.GetConfig().Id
+		if _, ok := watchers[id]; ok {
 			return nil, fmt.Errorf("createWatchers: duplicated watcher id in config")
 		}
 
-		watchers[w.GetId()] = w
+		watchers[id] = w
 	}
 
 	return watchers, nil
@@ -82,7 +82,7 @@ func maintainWatchers(ctx context.Context, watchers map[string]provider.Watcher,
 			continue
 		}
 
-		ch, err := w.StartWatch(ctx, t, time.Duration(watchConfs[id].CheckPeriod)*time.Second)
+		ch, err := w.StartWatch(ctx, t)
 		if err != nil {
 			log.Printf("mainWatcher: error: %v", err)
 			continue

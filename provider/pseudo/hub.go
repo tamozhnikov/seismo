@@ -11,7 +11,7 @@ import (
 )
 
 type hubState interface {
-	startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error)
+	startWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error)
 	stateInfo() provider.WatcherStateInfo
 }
 
@@ -24,14 +24,11 @@ func newStoppedState(h *Hub) *stoppedState {
 	return &stoppedState{hub: h}
 }
 
-func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
-	if checkPeriod < time.Second {
-		return nil, fmt.Errorf("checkPeriod cannot be less than 1 sec")
-	}
+func (s *stoppedState) startWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
 	h := s.hub
 	h.setState(newRunState(h))
 	o := make(chan provider.Message)
-	go h.generateMessages(ctx, o, checkPeriod)
+	go h.generateMessages(ctx, o)
 
 	return o, nil
 }
@@ -49,7 +46,7 @@ func newRunState(h *Hub) *runState {
 	return &runState{hub: h}
 }
 
-func (r *runState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
+func (r *runState) startWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
 	return nil, provider.AlreadyRunErr{}
 }
 
@@ -61,25 +58,27 @@ func (r *runState) stateInfo() provider.WatcherStateInfo {
 // implementing the provider.Watcher interface
 // and creating new messages randomly
 type Hub struct {
-	id string
+	config provider.WatcherConfig
+	//config provider.WatcherConfig
 	//state implements the State pattern
 	state hubState
 }
 
-func NewHub(id string) *Hub {
+func NewHub(conf provider.WatcherConfig) (*Hub, error) {
+	if conf.CheckPeriod < 1 {
+		return nil, fmt.Errorf("NewHub: checkperiod cannot be less than 1 second")
+	}
+
 	h := &Hub{}
-	h.SetId(id)
+	h.config = conf
+
 	h.setState(newStoppedState(h))
 
-	return h
+	return h, nil
 }
 
-func (h *Hub) SetId(id string) {
-	h.id = id
-}
-
-func (h *Hub) GetId() string {
-	return h.id
+func (h *Hub) GetConfig() provider.WatcherConfig {
+	return h.config
 }
 
 func (h *Hub) setState(s hubState) {
@@ -95,12 +94,12 @@ func (h *Hub) StateInfo() provider.WatcherStateInfo {
 // the FocusTime of every message corresponds to its generating moment,
 // the from argument is ignored
 // Returns a channel for getting these messages.
-func (h *Hub) StartWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
-	o, err := h.state.startWatch(ctx, from, checkPeriod)
+func (h *Hub) StartWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
+	o, err := h.state.startWatch(ctx, from)
 	return o, err
 }
 
-func (h *Hub) generateMessages(ctx context.Context, o chan<- provider.Message, period time.Duration) {
+func (h *Hub) generateMessages(ctx context.Context, o chan<- provider.Message) {
 	defer func() {
 		close(o)
 		h.setState(newStoppedState(h))
@@ -113,7 +112,7 @@ func (h *Hub) generateMessages(ctx context.Context, o chan<- provider.Message, p
 		for _, m := range msgs {
 			o <- m
 		}
-		time.Sleep(period)
+		time.Sleep(time.Duration(h.config.CheckPeriod) * time.Second)
 	}
 }
 
@@ -133,7 +132,7 @@ func (h *Hub) createRandMsgs() []provider.Message {
 
 		m := provider.Message{}
 
-		m.SourceId = h.GetId()
+		m.SourceId = h.config.Id
 		m.FocusTime = time.Now().UTC()
 		m.Latitude = lat + lat*((rand.Float64()-0.5)/100.0)
 		m.Longitude = long + long*((rand.Float64()-0.5)/100.0)

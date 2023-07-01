@@ -2,6 +2,7 @@ package pseudo
 
 import (
 	"fmt"
+	"seismo/provider"
 	"testing"
 )
 
@@ -11,7 +12,8 @@ import (
 // and expected values
 func Test_createRandMsgs(t *testing.T) {
 	//t.Errorf("")
-	h := NewHub("pseudo")
+	c := provider.WatcherConfig{Id: "pseudo", CheckPeriod: 1}
+	h, _ := NewHub(c)
 	for i := 0; i < 10; i++ {
 		msgs := h.createRandMsgs()
 
