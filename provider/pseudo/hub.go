@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"seismo"
+	"seismo/provider"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type hubState interface {
-	startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error)
-	stateInfo() seismo.WatcherStateInfo
+	startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error)
+	stateInfo() provider.WatcherStateInfo
 }
 
 // stoppedState implements a stopped Hub's behavior within the STATE PATTERN
@@ -24,20 +24,20 @@ func newStoppedState(h *Hub) *stoppedState {
 	return &stoppedState{hub: h}
 }
 
-func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
+func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
 	if checkPeriod < time.Second {
 		return nil, fmt.Errorf("checkPeriod cannot be less than 1 sec")
 	}
 	h := s.hub
 	h.setState(newRunState(h))
-	o := make(chan seismo.Message)
+	o := make(chan provider.Message)
 	go h.generateMessages(ctx, o, checkPeriod)
 
 	return o, nil
 }
 
-func (s *stoppedState) stateInfo() seismo.WatcherStateInfo {
-	return seismo.Stopped
+func (s *stoppedState) stateInfo() provider.WatcherStateInfo {
+	return provider.Stopped
 }
 
 // runState implements a running Hub's behavior within the STATE PATTERN
@@ -49,16 +49,16 @@ func newRunState(h *Hub) *runState {
 	return &runState{hub: h}
 }
 
-func (r *runState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
-	return nil, seismo.AlreadyRunErr{}
+func (r *runState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
+	return nil, provider.AlreadyRunErr{}
 }
 
-func (r *runState) stateInfo() seismo.WatcherStateInfo {
-	return seismo.Run
+func (r *runState) stateInfo() provider.WatcherStateInfo {
+	return provider.Run
 }
 
 // Hub emulates getting seismic event messages
-// implementing the seismo.Watcher interface
+// implementing the provider.Watcher interface
 // and creating new messages randomly
 type Hub struct {
 	id string
@@ -87,7 +87,7 @@ func (h *Hub) setState(s hubState) {
 }
 
 // StateInfo reports a current state of the hub
-func (h *Hub) StateInfo() seismo.WatcherStateInfo {
+func (h *Hub) StateInfo() provider.WatcherStateInfo {
 	return h.state.stateInfo()
 }
 
@@ -95,12 +95,12 @@ func (h *Hub) StateInfo() seismo.WatcherStateInfo {
 // the FocusTime of every message corresponds to its generating moment,
 // the from argument is ignored
 // Returns a channel for getting these messages.
-func (h *Hub) StartWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
+func (h *Hub) StartWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
 	o, err := h.state.startWatch(ctx, from, checkPeriod)
 	return o, err
 }
 
-func (h *Hub) generateMessages(ctx context.Context, o chan<- seismo.Message, period time.Duration) {
+func (h *Hub) generateMessages(ctx context.Context, o chan<- provider.Message, period time.Duration) {
 	defer func() {
 		close(o)
 		h.setState(newStoppedState(h))
@@ -119,10 +119,10 @@ func (h *Hub) generateMessages(ctx context.Context, o chan<- seismo.Message, per
 
 // createRandMsgs returns a slice containing 1 to 3 messages
 // with the same EventId
-func (h *Hub) createRandMsgs() []seismo.Message {
+func (h *Hub) createRandMsgs() []provider.Message {
 	rand.Seed(time.Now().UnixNano())
 	num := rand.Intn(3) + 1
-	msgs := make([]seismo.Message, 0, num)
+	msgs := make([]provider.Message, 0, num)
 
 	id := uuid.New().String()
 	lat := rand.Float64()*20.0 + 40.0
@@ -131,7 +131,7 @@ func (h *Hub) createRandMsgs() []seismo.Message {
 
 	for i := 0; i < num; i++ {
 
-		m := seismo.Message{}
+		m := provider.Message{}
 
 		m.SourceId = h.GetId()
 		m.FocusTime = time.Now().UTC()
@@ -139,8 +139,8 @@ func (h *Hub) createRandMsgs() []seismo.Message {
 		m.Longitude = long + long*((rand.Float64()-0.5)/100.0)
 		m.Magnitude = mag
 		m.EventId = id
-		m.Type = seismo.RandEventType()
-		m.Quality = seismo.RandEventQuality()
+		m.Type = provider.RandEventType()
+		m.Quality = provider.RandEventQuality()
 
 		msgs = append(msgs, m)
 	}

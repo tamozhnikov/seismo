@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"seismo"
+	"seismo/provider"
 	"sort"
 	"strconv"
 	"strings"
@@ -27,14 +27,12 @@ const (
 	//avgMonthMsgNum constant defines average number of seismic messages per month
 	//on SEISHUB. This constant is used to create slices with proper capacity.
 	avgMonthMsgNum = 200
-
-	msgPageNumLen = 6
 )
 
 // hubState interface for implementing the STATE DESIGN PATTERN in the Hub structure
 type hubState interface {
-	startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error)
-	stateInfo() seismo.WatcherStateInfo
+	startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error)
+	stateInfo() provider.WatcherStateInfo
 }
 
 // stoppedState implements a stopped Hub's behavior within the STATE PATTERN
@@ -46,7 +44,7 @@ func newStoppedState(h *Hub) *stoppedState {
 	return &stoppedState{hub: h}
 }
 
-func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
+func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
 	from = from.UTC()
 	now := time.Now().UTC()
 	if from.After(now) {
@@ -54,7 +52,7 @@ func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeri
 	}
 	h := s.hub
 	h.setState(newRunState(s.hub))
-	o := make(chan seismo.Message)
+	o := make(chan provider.Message)
 	sn := make(chan int, 1)
 	go h.getStartMsgNum(ctx, sn, from, checkPeriod)
 	go h.watch(ctx, o, sn, from, checkPeriod)
@@ -62,8 +60,8 @@ func (s *stoppedState) startWatch(ctx context.Context, from time.Time, checkPeri
 	return o, nil
 }
 
-func (s *stoppedState) stateInfo() seismo.WatcherStateInfo {
-	return seismo.Stopped
+func (s *stoppedState) stateInfo() provider.WatcherStateInfo {
+	return provider.Stopped
 }
 
 // runState implements a running Hub's behavior within the STATE PATTERN
@@ -75,12 +73,12 @@ func newRunState(h *Hub) *runState {
 	return &runState{hub: h}
 }
 
-func (r *runState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
-	return nil, seismo.AlreadyRunErr{}
+func (r *runState) startWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
+	return nil, provider.AlreadyRunErr{}
 }
 
-func (r *runState) stateInfo() seismo.WatcherStateInfo {
-	return seismo.Run
+func (r *runState) stateInfo() provider.WatcherStateInfo {
+	return provider.Run
 }
 
 // Hub provides getting seismic event messages
@@ -127,7 +125,7 @@ func (h *Hub) setState(s hubState) {
 	h.state = s
 }
 
-func (h *Hub) StateInfo() seismo.WatcherStateInfo {
+func (h *Hub) StateInfo() provider.WatcherStateInfo {
 	return h.state.stateInfo()
 }
 
@@ -137,12 +135,12 @@ func (h *Hub) StateInfo() seismo.WatcherStateInfo {
 // Can start watching only in the current month or before.
 // Watching can't be started in future months.
 // Returns an error in such case.
-func (h *Hub) StartWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan seismo.Message, error) {
+func (h *Hub) StartWatch(ctx context.Context, from time.Time, checkPeriod time.Duration) (<-chan provider.Message, error) {
 	o, err := h.state.startWatch(ctx, from, checkPeriod)
 	return o, err
 }
 
-func (h *Hub) watch(ctx context.Context, o chan<- seismo.Message, sn <-chan int, from time.Time, checkPeriod time.Duration) {
+func (h *Hub) watch(ctx context.Context, o chan<- provider.Message, sn <-chan int, from time.Time, checkPeriod time.Duration) {
 	defer close(o)
 	msgNum, ok := <-sn //Wait for the start message number
 	if !ok {
@@ -152,7 +150,7 @@ func (h *Hub) watch(ctx context.Context, o chan<- seismo.Message, sn <-chan int,
 	wt := time.NewTicker(checkPeriod)
 	defer wt.Stop()
 
-	month := seismo.MonthYear{Month: from.Month(), Year: from.Year()}
+	month := provider.MonthYear{Month: from.Month(), Year: from.Year()}
 	for {
 		select {
 		case <-wt.C:
@@ -170,7 +168,7 @@ func (h *Hub) watch(ctx context.Context, o chan<- seismo.Message, sn <-chan int,
 
 }
 
-func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *seismo.MonthYear) (*seismo.Message, error) {
+func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *provider.MonthYear) (*provider.Message, error) {
 	msgName := msgNumToName(*msgNum)
 	l, err := url.JoinPath(h.BaseAddr, MonthYearPathSeg(month.Month, month.Year), msgName)
 	if err != nil {
@@ -210,7 +208,7 @@ func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *seismo.MonthYear
 }
 
 func (h *Hub) getStartMsgNum(ctx context.Context, sn chan<- int, from time.Time, checkPeriod time.Duration) {
-	m := seismo.MonthYear{Month: from.Month(), Year: from.Year()}
+	m := provider.MonthYear{Month: from.Month(), Year: from.Year()}
 	wt := time.NewTicker(checkPeriod)
 	defer func() {
 		wt.Stop()
@@ -242,7 +240,7 @@ func (h *Hub) getStartMsgNum(ctx context.Context, sn chan<- int, from time.Time,
 	}
 }
 
-func findStartMsgNum(msgs []*seismo.Message, from time.Time) (int, error) {
+func findStartMsgNum(msgs []*provider.Message, from time.Time) (int, error) {
 	//Create a meta-slice ordered by a message number (parsed from the link)
 	//and find the first message with focus time more than the "from" arg
 	//This logic is neccesary because the seishub DOESN'T ENSURE that a message
@@ -275,7 +273,7 @@ func findStartMsgNum(msgs []*seismo.Message, from time.Time) (int, error) {
 	return ind[len(ind)-1].num, nil
 }
 
-func (h *Hub) getMsgByLink(ctx context.Context, link string) (*seismo.Message, error) {
+func (h *Hub) getMsgByLink(ctx context.Context, link string) (*provider.Message, error) {
 	m, err := GetMsg(ctx, link, &h.Client)
 	if err != nil {
 		return nil, fmt.Errorf("getMsgByLink: link %s, error: %w", link, err)
@@ -287,7 +285,7 @@ func (h *Hub) getMsgByLink(ctx context.Context, link string) (*seismo.Message, e
 
 // Extract returns seismic messages extracted from SEISHUB.
 func (h *Hub) Extract(ctx context.Context,
-	from seismo.MonthYear, to seismo.MonthYear, paral int) ([]*seismo.Message, error) {
+	from provider.MonthYear, to provider.MonthYear, paral int) ([]*provider.Message, error) {
 
 	monthNum := to.Diff(from) + 1
 	if monthNum <= 0 {
@@ -299,7 +297,7 @@ func (h *Hub) Extract(ctx context.Context,
 	}
 
 	//Result slice of messages
-	msgs := make([]*seismo.Message, 0, avgMonthMsgNum*monthNum)
+	msgs := make([]*provider.Message, 0, avgMonthMsgNum*monthNum)
 	links := make(chan string)
 
 	var wg sync.WaitGroup

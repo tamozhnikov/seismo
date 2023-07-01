@@ -1,4 +1,4 @@
-package seismo
+package provider
 
 import (
 	"math/rand"

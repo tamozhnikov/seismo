@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"seismo"
+	"seismo/provider"
 	"strings"
 	"testing"
 	"time"
@@ -178,7 +178,7 @@ func Test_ParseMsg(t *testing.T) {
 			t.Errorf("\nCannot parse \"%s\": %v\n", f.Name(), err)
 		}
 
-		var wantMsg seismo.Message
+		var wantMsg provider.Message
 		if err = json.Unmarshal(wantBuf, &wantMsg); err != nil {
 			t.Fatalf("\nCannot unmarshal \"%s\"; error: %v", f.Name()+".json", err)
 		}
@@ -196,13 +196,13 @@ func Test_GetMsg(t *testing.T) {
 		"http://seishub.ru/pipermail/seismic-report/2023-March/021128.html",
 	}
 
-	want := seismo.Message{EventId: "asb2023eesfwx"}
+	want := provider.Message{EventId: "asb2023eesfwx"}
 	want.FocusTime, _ = time.Parse("2006.01.02 03:04:05", "2023.03.01 05:13:16.43")
 	want.Latitude = 54.71
 	want.Longitude = 83.67
 	want.Magnitude = 3.3
-	want.Type = seismo.QuarryBlast
-	want.Quality = seismo.Excellent
+	want.Type = provider.QuarryBlast
+	want.Quality = provider.Excellent
 	want.Link = "http://seishub.ru/pipermail/seismic-report/2023-March/021128.html"
 
 	res, err := GetMsg(context.Background(), input.url, nil)
@@ -217,21 +217,21 @@ func Test_GetMsg(t *testing.T) {
 
 func Test_monthYearPathSeg(t *testing.T) {
 	var tests = []struct {
-		input seismo.MonthYear
+		input provider.MonthYear
 		want  string
 	}{
-		{seismo.MonthYear{1, 2022}, "2022-January"},
-		{seismo.MonthYear{2, 2022}, "2022-February"},
-		{seismo.MonthYear{3, 2022}, "2022-March"},
-		{seismo.MonthYear{4, 2022}, "2022-April"},
-		{seismo.MonthYear{5, 2022}, "2022-May"},
-		{seismo.MonthYear{6, 2022}, "2022-June"},
-		{seismo.MonthYear{7, 2022}, "2022-July"},
-		{seismo.MonthYear{8, 2022}, "2022-August"},
-		{seismo.MonthYear{9, 2022}, "2022-September"},
-		{seismo.MonthYear{10, 2022}, "2022-October"},
-		{seismo.MonthYear{11, 2022}, "2022-November"},
-		{seismo.MonthYear{12, 2022}, "2022-December"},
+		{provider.MonthYear{1, 2022}, "2022-January"},
+		{provider.MonthYear{2, 2022}, "2022-February"},
+		{provider.MonthYear{3, 2022}, "2022-March"},
+		{provider.MonthYear{4, 2022}, "2022-April"},
+		{provider.MonthYear{5, 2022}, "2022-May"},
+		{provider.MonthYear{6, 2022}, "2022-June"},
+		{provider.MonthYear{7, 2022}, "2022-July"},
+		{provider.MonthYear{8, 2022}, "2022-August"},
+		{provider.MonthYear{9, 2022}, "2022-September"},
+		{provider.MonthYear{10, 2022}, "2022-October"},
+		{provider.MonthYear{11, 2022}, "2022-November"},
+		{provider.MonthYear{12, 2022}, "2022-December"},
 	}
 
 	for _, test := range tests {

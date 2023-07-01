@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"seismo"
 	"seismo/collector"
 	"seismo/collector/db"
 	"seismo/provider"
+	"seismo/provider/crt"
 	"time"
 )
 
@@ -44,11 +44,11 @@ func main() {
 	// }
 }
 
-func createWatchers(conf collector.Config) (map[string]seismo.Watcher, error) {
-	watchers := make(map[string]seismo.Watcher, len(conf.Watchers))
+func createWatchers(conf collector.Config) (map[string]provider.Watcher, error) {
+	watchers := make(map[string]provider.Watcher, len(conf.Watchers))
 
 	for _, c := range conf.Watchers {
-		w, err := provider.NewWatcher(c)
+		w, err := crt.NewWatcher(c)
 		if err != nil {
 			return nil, fmt.Errorf("createWatchers: %w", err)
 		}
@@ -64,15 +64,15 @@ func createWatchers(conf collector.Config) (map[string]seismo.Watcher, error) {
 }
 
 // maintainWatchers checks a current state of every watcher and tries to restart if it is stopped
-func maintainWatchers(ctx context.Context, watchers map[string]seismo.Watcher, watchConfs map[string]provider.WatcherConfig,
-	dbAdapter db.Adapter, watchPipes chan<- <-chan seismo.Message) {
+func maintainWatchers(ctx context.Context, watchers map[string]provider.Watcher, watchConfs map[string]provider.WatcherConfig,
+	dbAdapter db.Adapter, watchPipes chan<- <-chan provider.Message) {
 
 	for id, w := range watchers {
 		if _, ok := <-ctx.Done(); ok {
 			return
 		}
 
-		if w.StateInfo() != seismo.Stopped {
+		if w.StateInfo() != provider.Stopped {
 			continue
 		}
 

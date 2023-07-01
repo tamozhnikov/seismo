@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"seismo"
+	"seismo/provider"
 	"strconv"
 	"strings"
 	"time"
@@ -124,8 +124,8 @@ func GetMsgPage(ctx context.Context, link string, cl *http.Client) (string, erro
 	return buf.String(), nil
 }
 
-func ParseMsg(msg string) (*seismo.Message, error) {
-	var resMsg seismo.Message
+func ParseMsg(msg string) (*provider.Message, error) {
+	var resMsg provider.Message
 
 	//Parse EventId (obligatiry)
 	re := regexp.MustCompile(`EVENT PUBLIC ID:\s*\w+`)
@@ -182,7 +182,7 @@ func ParseMsg(msg string) (*seismo.Message, error) {
 	return &resMsg, nil
 }
 
-func GetMsg(ctx context.Context, link string, cl *http.Client) (m *seismo.Message, err error) {
+func GetMsg(ctx context.Context, link string, cl *http.Client) (m *provider.Message, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("extractMsg: %w", err)
@@ -203,26 +203,26 @@ func GetMsg(ctx context.Context, link string, cl *http.Client) (m *seismo.Messag
 	return m, nil
 }
 
-func defineEventType(s string) seismo.EventType {
+func defineEventType(s string) provider.EventType {
 	switch strings.ToLower(s) {
 	case "quarry blast":
-		return seismo.QuarryBlast
+		return provider.QuarryBlast
 	case "earthquake":
-		return seismo.EarthQuake
+		return provider.EarthQuake
 	default:
-		return seismo.UnknownType
+		return provider.UnknownType
 	}
 }
 
-func defineEventQuality(s string) seismo.EventQuality {
+func defineEventQuality(s string) provider.EventQuality {
 	switch strings.ToLower(s) {
 	case "наилучшее, обработано аналитиком":
-		return seismo.Excellent
+		return provider.Excellent
 	case "предварительная оценка":
-		return seismo.Preliminary
+		return provider.Preliminary
 	case "хорошо":
-		return seismo.Good
+		return provider.Good
 	default:
-		return seismo.UnknownQuality
+		return provider.UnknownQuality
 	}
 }

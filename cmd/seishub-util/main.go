@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"seismo"
+	"seismo/provider"
 	"seismo/provider/seishub"
 	"time"
 )
@@ -31,9 +31,9 @@ const (
 func main() {
 	// There are 5 (five) flags: "from", "to", "baseAddr", "mode", "out"
 	t := time.Now()
-	curMY := seismo.MonthYear{Month: t.Month(), Year: t.Year()}
-	fromFlag := seismo.MonthYearFlag("from", curMY, "start point in month/year format")
-	toFlag := seismo.MonthYearFlag("to", curMY, "end point in month/year format")
+	curMY := provider.MonthYear{Month: t.Month(), Year: t.Year()}
+	fromFlag := provider.MonthYearFlag("from", curMY, "start point in month/year format")
+	toFlag := provider.MonthYearFlag("to", curMY, "end point in month/year format")
 
 	baseAddrFlag := flag.String("baseAddr", "", "base address (url)")
 
@@ -142,7 +142,7 @@ func parseMsgFiles(inputDir, saveDir string) error {
 	return nil
 }
 
-func getMsgPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
+func getMsgPages(from, to provider.MonthYear, baseAddr, saveDir string) error {
 	for my := from.Date(); !my.After(to.Date()); my = my.AddDate(0, 1, 0) {
 		sg := seishub.MonthYearPathSeg(my.Month(), my.Year())
 		url, err := url.JoinPath(baseAddr, sg)
@@ -169,7 +169,7 @@ func getMsgPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
 	return nil
 }
 
-func getListPages(from, to seismo.MonthYear, baseAddr, saveDir string) error {
+func getListPages(from, to provider.MonthYear, baseAddr, saveDir string) error {
 	for my := from.Date(); !my.After(to.Date()); my = my.AddDate(0, 1, 0) {
 		sg := seishub.MonthYearPathSeg(my.Month(), my.Year())
 		url, err := url.JoinPath(baseAddr, sg)

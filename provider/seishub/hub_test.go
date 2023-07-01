@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"seismo"
+	"seismo/provider"
 	"testing"
 	"time"
 )
@@ -14,7 +14,7 @@ import (
 func Test_ExtractMessages(t *testing.T) {
 	ext := NewHub("seisub", "", 0)
 	msgs, err := ext.Extract(context.Background(),
-		seismo.MonthYear{Month: 6, Year: 2023}, seismo.MonthYear{Month: 7, Year: 2023}, 7)
+		provider.MonthYear{Month: 6, Year: 2023}, provider.MonthYear{Month: 7, Year: 2023}, 7)
 	if err != nil {
 		t.Fatalf("ExtractMessages: error: %v", err)
 	}
@@ -29,7 +29,7 @@ func Test_findStartMsgNum(t *testing.T) {
 		t.Fatalf("Cannot read input data directory content list: %s", inputDataDir)
 	}
 
-	msgs := make([]*seismo.Message, 0, len(inputFiles))
+	msgs := make([]*provider.Message, 0, len(inputFiles))
 
 	for _, f := range inputFiles {
 		if f.IsDir() || f.Size() > maxInputSize {
@@ -42,7 +42,7 @@ func Test_findStartMsgNum(t *testing.T) {
 			t.Fatalf("Cannot read \"%s\": %v\n", f.Name(), err)
 		}
 
-		var m seismo.Message
+		var m provider.Message
 		if err = json.Unmarshal(inputBuf, &m); err != nil {
 			t.Fatalf("\nCannot unmarshal \"%s\"; error: %v", f.Name()+".json", err)
 		}

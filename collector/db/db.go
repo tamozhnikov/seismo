@@ -3,8 +3,8 @@ package db
 import (
 	"context"
 	"fmt"
-	"seismo"
 	"seismo/collector/db/stubdb"
+	"seismo/provider"
 	"time"
 )
 
@@ -28,7 +28,7 @@ func DefaultDbConfig() DbConfig {
 }
 
 type Adapter interface {
-	SaveMsg(ctx context.Context, msgs []seismo.Message) error
+	SaveMsg(ctx context.Context, msgs []provider.Message) error
 	GetLastTime(ctx context.Context, sorceId string) (time.Time, error)
 }
 
