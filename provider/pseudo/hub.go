@@ -25,6 +25,9 @@ func newStoppedState(h *Hub) *stoppedState {
 }
 
 func (s *stoppedState) startWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
+	if ctx.Err() != nil {
+		return nil, fmt.Errorf("cannot start with canceled context")
+	}
 	h := s.hub
 	h.setState(newRunState(h))
 	o := make(chan provider.Message)
@@ -105,12 +108,16 @@ func (h *Hub) generateMessages(ctx context.Context, o chan<- provider.Message) {
 		h.setState(newStoppedState(h))
 	}()
 	for {
-		if ctx.Err() != nil {
-			return
-		}
-		msgs := h.createRandMsgs()
-		for _, m := range msgs {
-			o <- m
+		for _, m := range h.createRandMsgs() {
+			if ctx.Err() != nil {
+				return
+			}
+
+			select {
+			case o <- m:
+			case <-ctx.Done():
+				return
+			}
 		}
 		time.Sleep(time.Duration(h.config.CheckPeriod) * time.Second)
 	}

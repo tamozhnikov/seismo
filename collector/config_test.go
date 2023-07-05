@@ -20,7 +20,7 @@ func Test_ConfigFromFile(t *testing.T) {
 		panic(err)
 	}
 
-	fileName := "testdata/conf.json"
+	fileName := "testdata/simple_conf.json"
 	err = os.WriteFile(fileName, bf, os.ModePerm)
 	if err != nil {
 		panic(err)

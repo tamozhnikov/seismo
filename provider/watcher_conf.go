@@ -7,10 +7,11 @@ const (
 	Seishub ProviderType = "seishub"
 
 	//default values
-	defId      string       = "pseudo_1"
-	defT       ProviderType = Pseudo
-	defConnStr string       = ""
-	defTimeout uint         = 120
+	defId          string       = "pseudo_1"
+	defT           ProviderType = Pseudo
+	defConnStr     string       = ""
+	defTimeout     uint         = 120
+	defCheckPeriod uint         = 2
 )
 
 type WatcherConfig struct {
@@ -22,5 +23,5 @@ type WatcherConfig struct {
 }
 
 func DefaultWatcherConfig() WatcherConfig {
-	return WatcherConfig{Id: defId, T: defT, ConnStr: defConnStr, Timeout: defTimeout}
+	return WatcherConfig{Id: defId, T: defT, ConnStr: defConnStr, Timeout: defTimeout, CheckPeriod: defCheckPeriod}
 }

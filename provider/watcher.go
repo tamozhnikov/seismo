@@ -5,12 +5,12 @@ import (
 	"time"
 )
 
-type WatcherStateInfo int
+type WatcherStateInfo string
 
 const (
 	//watcher states
-	Stopped WatcherStateInfo = iota
-	Run
+	Stopped WatcherStateInfo = "Stopped"
+	Run     WatcherStateInfo = "Run"
 )
 
 type Watcher interface {

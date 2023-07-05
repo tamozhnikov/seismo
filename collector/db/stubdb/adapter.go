@@ -2,6 +2,7 @@ package stubdb
 
 import (
 	"context"
+	"fmt"
 	"seismo/provider"
 	"time"
 )
@@ -10,6 +11,7 @@ type Adapter struct{}
 
 // SaveMsg always returns nil
 func (s *Adapter) SaveMsg(ctx context.Context, msgs []provider.Message) error {
+	fmt.Println(msgs)
 	return nil
 }
 

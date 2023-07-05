@@ -9,12 +9,15 @@ import (
 )
 
 type Config struct {
-	Watchers map[string]provider.WatcherConfig `json:"watchers"`
-	Db       db.DbConfig                       `json:"db"`
+	Watchers       map[string]provider.WatcherConfig `json:"watchers"`
+	Db             db.DbConfig                       `json:"db"`
+	MaintainPeriod uint                              `json:"maintain_period"`
 }
 
 const (
 	configFileVar = "SEISMO_COLLECTOR_CONFIG"
+
+	defMaintainPeriod uint = 2
 )
 
 func DefaultConfig() Config {
@@ -23,6 +26,7 @@ func DefaultConfig() Config {
 	wc := provider.DefaultWatcherConfig()
 	c.Watchers[wc.Id] = wc
 	c.Db = db.DefaultDbConfig()
+	c.MaintainPeriod = defMaintainPeriod
 	return c
 }
 
