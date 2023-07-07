@@ -17,7 +17,7 @@ func Test_createRandMsgs(t *testing.T) {
 	c := provider.WatcherConfig{Id: "pseudo", CheckPeriod: 1}
 	h, _ := NewHub(c)
 	for i := 0; i < 10; i++ {
-		msgs := h.createRandMsgs()
+		msgs := h.createRandMsgs(0)
 
 		for _, m := range msgs {
 			fmt.Println(m)
