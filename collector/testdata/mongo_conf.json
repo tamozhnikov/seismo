@@ -1,0 +1,1 @@
+{"watchers":{"pseudo_1":{"id":"pseudo_1","t":"pseudo","conn_str":"","timeout":120,"check_period":2} },"db":{"T":"MongoDb","ConnStr":"mongodb://localhost:27017/collectorDb"},"maintain_period":1}
