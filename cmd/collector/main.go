@@ -18,7 +18,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	conf, err := collector.ConfigFromFile("collector/testdata/double_conf.json") //DefaultConfig()
+	conf, err := collector.ConfigFromFile("collector/testdata/double_mongo_conf.json") //DefaultConfig()
 	if err != nil {
 		log.Printf("main: cannot read config file: %v", err)
 		return
@@ -35,6 +35,13 @@ func main() {
 		log.Printf("main: cannot create database adaper %v", err)
 		return
 	}
+
+	err = dbAdapter.Connect(ctx, conf.Db.ConnStr)
+	if err != nil {
+		log.Printf("main: cannot connect to database %v", err)
+		return
+	}
+	defer dbAdapter.Close(ctx)
 
 	watchPipes := make(chan (<-chan provider.Message))
 

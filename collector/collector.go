@@ -7,6 +7,7 @@ import (
 	"seismo/collector/db"
 	"seismo/provider"
 	"seismo/provider/crt"
+	"time"
 )
 
 func CreateWatchers(conf Config) (map[string]provider.Watcher, error) {
@@ -43,6 +44,12 @@ func RestartWatchers(ctx context.Context, watchers map[string]provider.Watcher,
 		if err != nil {
 			log.Printf("RestartWatchers: error: %v", err)
 			continue
+		}
+
+		//if a returned last time has the 0 value, watching start time is now
+		var t0 time.Time
+		if t == t0 {
+			t = time.Now().UTC()
 		}
 
 		ch, err := w.StartWatch(ctx, t)

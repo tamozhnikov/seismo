@@ -31,7 +31,7 @@ func (s *stoppedState) startWatch(ctx context.Context, from time.Time) (<-chan p
 	h := s.hub
 	h.setState(newRunState(h))
 	o := make(chan provider.Message)
-	go h.generateMessages(ctx, o)
+	go h.generateMessages(ctx, o, from)
 
 	return o, nil
 }
@@ -102,13 +102,15 @@ func (h *Hub) StartWatch(ctx context.Context, from time.Time) (<-chan provider.M
 	return o, err
 }
 
-func (h *Hub) generateMessages(ctx context.Context, o chan<- provider.Message) {
+func (h *Hub) generateMessages(ctx context.Context, o chan<- provider.Message, from time.Time) {
 	defer func() {
 		close(o)
 		h.setState(newStoppedState(h))
 	}()
+
+	offset := time.Now().UTC().Sub(from)
 	for {
-		for _, m := range h.createRandMsgs() {
+		for _, m := range h.createRandMsgs(offset) {
 			if ctx.Err() != nil {
 				return
 			}
@@ -125,7 +127,7 @@ func (h *Hub) generateMessages(ctx context.Context, o chan<- provider.Message) {
 
 // createRandMsgs returns a slice containing 1 to 3 messages
 // with the same EventId
-func (h *Hub) createRandMsgs() []provider.Message {
+func (h *Hub) createRandMsgs(offset time.Duration) []provider.Message {
 	rand.Seed(time.Now().UnixNano())
 	num := rand.Intn(3) + 1
 	msgs := make([]provider.Message, 0, num)
@@ -140,7 +142,7 @@ func (h *Hub) createRandMsgs() []provider.Message {
 		m := provider.Message{}
 
 		m.SourceId = h.config.Id
-		m.FocusTime = time.Now().UTC()
+		m.FocusTime = time.Now().UTC().Add(-offset)
 		m.Latitude = lat + lat*((rand.Float64()-0.5)/100.0)
 		m.Longitude = long + long*((rand.Float64()-0.5)/100.0)
 		m.Magnitude = mag

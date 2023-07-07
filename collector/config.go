@@ -60,12 +60,12 @@ func ConfigFromFile(name string) (Config, error) {
 
 	buf, err := os.ReadFile(name)
 	if err != nil {
-		return c, fmt.Errorf("ConfigFileNameFromEnv: name: %s, error: %w", name, err)
+		return c, fmt.Errorf("ConfigFromFile: name: %s, error: %w", name, err)
 	}
 
 	err = json.Unmarshal(buf, &c)
 	if err != nil {
-		return c, fmt.Errorf("ConfigFileNameFromEnv: name: %s, error: %w", name, err)
+		return c, fmt.Errorf("ConfigFromFile: name: %s, error: %w", name, err)
 	}
 
 	return c, nil
