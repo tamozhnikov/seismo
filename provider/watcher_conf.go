@@ -7,13 +7,15 @@ const (
 	Seishub ProviderType = "seishub"
 
 	//default values
-	defId          string       = "pseudo_1"
-	defT           ProviderType = Pseudo
-	defConnStr     string       = ""
-	defTimeout     uint         = 120
-	defCheckPeriod uint         = 2
+
+	DefId          string       = "pseudo_1"
+	DefT           ProviderType = Pseudo
+	DefConnStr     string       = ""
+	DefTimeout     uint         = 120
+	DefCheckPeriod uint         = 2
 )
 
+// WatcherConfig represents
 type WatcherConfig struct {
 	Id          string       `json:"id"`
 	T           ProviderType `json:"t"`
@@ -22,6 +24,8 @@ type WatcherConfig struct {
 	CheckPeriod uint         `json:"check_period"`
 }
 
+// DefaultWatcherConfig returns a watcher configuration with default values.
+// Use this function for test purpose only.
 func DefaultWatcherConfig() WatcherConfig {
-	return WatcherConfig{Id: defId, T: defT, ConnStr: defConnStr, Timeout: defTimeout, CheckPeriod: defCheckPeriod}
+	return WatcherConfig{Id: DefId, T: DefT, ConnStr: DefConnStr, Timeout: DefTimeout, CheckPeriod: DefCheckPeriod}
 }
