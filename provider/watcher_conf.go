@@ -1,5 +1,6 @@
 package provider
 
+// ProviderType represents types (implementations) of message sources.
 type ProviderType string
 
 const (
@@ -15,13 +16,23 @@ const (
 	DefCheckPeriod uint         = 2
 )
 
-// WatcherConfig represents
+// WatcherConfig contains configurations of a message watcher.
 type WatcherConfig struct {
-	Id          string       `json:"id"`
-	T           ProviderType `json:"t"`
-	ConnStr     string       `json:"conn_str"`
-	Timeout     uint         `json:"timeout"`
-	CheckPeriod uint         `json:"check_period"`
+	// Id specifies the identifier of the message source.
+	Id string `json:"id"`
+
+	// T specifies the type of the message source (source provider).
+	T ProviderType `json:"t"`
+
+	// ConnStr specifies a connection string for the message source.
+	// E.g., the connection string can be an address of the source.
+	ConnStr string `json:"conn_str"`
+
+	//Timeout specifies a timeout value for connection to the message source.
+	Timeout uint `json:"timeout"`
+
+	// CheckPeriod specifies a period of checking the appearance of new messages.
+	CheckPeriod uint `json:"check_period"`
 }
 
 // DefaultWatcherConfig returns a watcher configuration with default values.

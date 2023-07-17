@@ -1,3 +1,7 @@
+// Package seismo/provider/crt localizes factory functions for creating
+// new instances implementing abstractions of the seismo/provider package.
+// The package provides an additional layer, that allows to avoid cyclic
+// dependencies between the seismo/provider package and its sub-packages.
 package crt
 
 import (
@@ -7,7 +11,7 @@ import (
 	"seismo/provider/seishub"
 )
 
-// NewWatcher localizes creating watchers depending on a specified type of provider
+// NewWatcher creats a new watcher implementation depending on a specified provider type.
 func NewWatcher(conf provider.WatcherConfig) (provider.Watcher, error) {
 	switch conf.T {
 	case provider.Pseudo:
