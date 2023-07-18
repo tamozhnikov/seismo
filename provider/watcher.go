@@ -27,6 +27,8 @@ type Watcher interface {
 	// an error. If watching is already started (the watcher is running),
 	// the method returns an AlreadyRunErr error and nil channel.
 	//
+	// If the returned error is not nil, the returned channel is nil.
+	//
 	// Watching can be stopped (cancelled) through context (the "ctx" argument).
 	// As a result of cancellation the message channel will be closed.
 	StartWatch(ctx context.Context, from time.Time) (<-chan Message, error)

@@ -17,12 +17,19 @@ const (
 	msgCollName = "messages"
 )
 
+// Adapter provides interaction with a MONGODB database.
 type Adapter struct {
+	//connStr specifies a connection string.
 	connStr string
-	dbName  string
-	client  mongo.Client
+
+	//dbName specifies the name of the database.
+	dbName string
+
+	client mongo.Client
 }
 
+// Connect opens a new connection to a database using "connStr" as the connection string
+// and initializes the adapter.
 func (a *Adapter) Connect(ctx context.Context, connStr string) error {
 	c, err := mongo.Connect(ctx, options.Client().ApplyURI(connStr))
 	if err != nil {
@@ -34,6 +41,7 @@ func (a *Adapter) Connect(ctx context.Context, connStr string) error {
 	return nil
 }
 
+// Close closes the opened connection.
 func (a *Adapter) Close(ctx context.Context) error {
 	err := a.client.Disconnect(ctx)
 	if err != nil {
@@ -42,6 +50,7 @@ func (a *Adapter) Close(ctx context.Context) error {
 	return nil
 }
 
+// SaveMsg saves messages in the connected database.
 func (a *Adapter) SaveMsg(ctx context.Context, msgs []provider.Message) error {
 	coll := a.client.Database(a.dbName).Collection(msgCollName)
 	mi := make([]interface{}, 0, len(msgs))
@@ -56,6 +65,7 @@ func (a *Adapter) SaveMsg(ctx context.Context, msgs []provider.Message) error {
 	return nil
 }
 
+// GetLastTime returns the focus time of the last saved message for specified "sourceId".
 func (a *Adapter) GetLastTime(ctx context.Context, sourceId string) (time.Time, error) {
 	coll := a.client.Database(a.dbName).Collection(msgCollName)
 

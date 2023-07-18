@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_GetLastTim(t *testing.T) {
+func Test_GetLastTime(t *testing.T) {
 	//t.Error()
 	var a Adapter
 	err := a.Connect(context.TODO(), "mongodb://localhost:27017/collectorDb")

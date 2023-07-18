@@ -1,3 +1,7 @@
+// Package seismo/collector provides basic types and functions
+// for the Collector application. The Collector application is
+// designed to collect messages about seismic activity from various
+// sources and save them into a database.
 package collector
 
 import (
@@ -10,6 +14,12 @@ import (
 	"time"
 )
 
+// CreateWatchers creates instances that implement the provider.Watcher interface.
+// Provider types and quantity of the instances are defined in the "conf" parameter.
+//
+// The first return value is a map, keys of which are identifiers of watchers (i.e.
+// their event sources), and values are watchers themselves. The second returned
+// value is an error. If the returned error is not nil, the returned map value is nil.
 func CreateWatchers(conf Config) (map[string]provider.Watcher, error) {
 	watchers := make(map[string]provider.Watcher, len(conf.Watchers))
 
@@ -30,7 +40,11 @@ func CreateWatchers(conf Config) (map[string]provider.Watcher, error) {
 	return watchers, nil
 }
 
-// RestartWatchers checks a current state of every watcher and tries to restart if it is stopped
+// RestartWatchers permanently checks a current state of every watcher in a passed
+// "watchers" map. If a watcher is stopped, the function tries to start it from the
+// focus time of the last message saved in the database represented by "dbAdapter".
+// If starting th watcher is successful, the function put the returned message channel
+// into the "watchPipes" channel (channel of channels).
 func RestartWatchers(ctx context.Context, watchers map[string]provider.Watcher,
 	dbAdapter db.Adapter, watchPipes chan<- (<-chan provider.Message)) {
 
@@ -62,7 +76,12 @@ func RestartWatchers(ctx context.Context, watchers map[string]provider.Watcher,
 	}
 }
 
-func MergeWatchPipes(watchPipes <-chan <-chan provider.Message) <-chan provider.Message {
+// MergeWatchPipes provides permanent merging message channels coming from the "watchPipes" channel
+// into a common message channel, returned by the function.
+//
+// All go-routines started inside the function will end, when all channels (the watchPipes and all message
+// channels transmitted through it) are closed and exhausted.
+func MergeWatchPipes(watchPipes <-chan (<-chan provider.Message)) <-chan provider.Message {
 	outPipe := make(chan provider.Message)
 
 	redirect := func(p <-chan provider.Message) {

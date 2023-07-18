@@ -1,3 +1,5 @@
+// The Collector application is designed to collect messages about seismic
+// activity from various sources and save them into a database.
 package main
 
 import (
