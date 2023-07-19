@@ -104,7 +104,7 @@ func (h *Hub) StateInfo() provider.WatcherStateInfo {
 // channel is nil.
 //
 // The FocusTime of every message corresponds to its generating moment minus an offset.
-// The offset is calculated as the differrence between the moment the function is called
+// The offset is calculated as the differrence between the moment the method is called
 // and the value of the "from" argument.
 func (h *Hub) StartWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
 	o, err := h.state.startWatch(ctx, from)

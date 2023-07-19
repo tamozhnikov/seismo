@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := collector #shu-build
+.DEFAULT_GOAL := shu-build #collector #shu-build
 
 collector:
 	go build -o bin/collector/collector cmd/collector/main.go
@@ -10,8 +10,10 @@ shu-build: #sh-fmt sh-vet
 .PHONY: shu-build
 
 sh-fmt:
-	go fmt ./pkg/seishub
+	go fmt ./provider/seishub
 .PHONY: sh-fmt
 
 sh-vet:
-	go vet ./pkg/seishub
+	go vet ./provider/seishub
+.PHONY: sh-vet
+

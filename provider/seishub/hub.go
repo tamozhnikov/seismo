@@ -55,12 +55,12 @@ func newStoppedState(h *Hub) *stoppedState {
 // Watching can't be started in future months. Returns an error in such case.
 func (s *stoppedState) startWatch(ctx context.Context, from time.Time) (<-chan provider.Message, error) {
 	// To start watching it is necessary to get the number of the start message,
-	// that is, the message that will be fetched first. Therefore, the function
+	// that is, the message that will be fetched first. Therefore, the method
 	// starts 2 go-routines: the first go-routine gets the start message number
 	// and sends it to the second go-routine through a channel, the second go-routine
 	// is waiting for this number and starts watching immediately after receiving the number.
 	//
-	// The function is designed to return a message channel to the user as soon as possible, and
+	// The method is designed to return a message channel to the user as soon as possible, and
 	// since the search for the start message number may take some time, a separate go-routine is
 	// used for this purpose.
 
@@ -161,8 +161,8 @@ func (h *Hub) StartWatch(ctx context.Context, from time.Time) (<-chan provider.M
 	return o, err
 }
 
-// watch waits the start message number from the "sn" channel, than the function checks for new messages
-// with a frequency of "checkPeriod" and send into the o channel.
+// watch waits the start message number from the "sn" channel, then the method checks for new messages
+// with a frequency of "checkPeriod" and sends into the "o" channel.
 func (h *Hub) watch(ctx context.Context, o chan<- provider.Message, sn <-chan int, from time.Time, checkPeriod time.Duration) {
 	defer close(o)
 	msgNum, ok := <-sn //Wait for the start message number
@@ -191,11 +191,11 @@ func (h *Hub) watch(ctx context.Context, o chan<- provider.Message, sn <-chan in
 }
 
 // checkMsg checks for a message with the message number "msgNum" in "month"
-// and increments "msgNum" if the message has been found. Otherwise the function
+// and increments "msgNum" if the message has been found. Otherwise the method
 // checks for a message with this number in the next month and increments
 // "msgNum" and "month" if the message has been found.
 //
-// The function returns a pointer to provider.Message and error. If error is not nil,
+// The method returns a pointer to provider.Message and error. If error is not nil,
 // the message pointer is nil.
 // If the message is not found, the message pointer is nil.
 func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *provider.MonthYear) (*provider.Message, error) {
@@ -240,7 +240,7 @@ func (h *Hub) checkMsg(ctx context.Context, msgNum *int, month *provider.MonthYe
 // getStartMsgNum finds a message number according to the logic described below
 // and sends it into the "sn" channel.
 //
-// The function fetches all messages for the month of the "from" parameter and
+// The method fetches all messages for the month of the "from" parameter and
 // searches among the messages for the one that has the minimum number and
 // FocusTime of which is after (or equal to) the value of the "from" parameter.
 // This logic is neccesary because SEISHUB DOESN'T ENSURE that a message
@@ -337,7 +337,7 @@ func (h *Hub) getMsgByLink(ctx context.Context, link string) (*provider.Message,
 // The "paral" parameter defines a number of go-routines to process message links (getting messages).
 // if "paral" is less (or equal to) 0, the default falue is used.
 //
-// Attention! The function does not guarantee immediate termination by context cancellation.
+// Attention! The method does not guarantee immediate termination by context cancellation.
 func (h *Hub) Extract(ctx context.Context,
 	from provider.MonthYear, to provider.MonthYear, paral int) ([]*provider.Message, error) {
 	links := make(chan string)

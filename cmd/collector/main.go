@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"seismo/collector"
 	"seismo/collector/db"
@@ -15,32 +16,44 @@ func main() {
 	log.SetPrefix("Collector: ")
 	log.Println("main: starting")
 
+	confFileName := *flag.String("confFile", "", "config file full name")
+	flag.Parse()
+
+	var err error
+	if confFileName == "" {
+		log.Println("Config file name is not specifies, try to get it from an environment variable...")
+		confFileName, err = collector.ConfigFileNameFromEnv()
+		if err != nil {
+			log.Printf("main: cannot get config file name: error: %v\n", err)
+		}
+	}
+
 	//cancel can be used in case of extending Collector
 	//with a special canceling gorouting
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	conf, err := collector.ConfigFromFile("collector/testdata/double_mongo_conf.json") //DefaultConfig()
+	conf, err := collector.ConfigFromFile(confFileName) //collector.ConfigFromFile("collector/testdata/double_mongo_conf.json") //DefaultConfig()
 	if err != nil {
-		log.Printf("main: cannot read config file: %v", err)
+		log.Printf("main: cannot read config file: %v\n", err)
 		return
 	}
 
 	watchers, err := collector.CreateWatchers(conf)
 	if err != nil {
-		log.Printf("main: cannot create watchers %v", err)
+		log.Printf("main: cannot create watchers %v\n", err)
 		return
 	}
 
 	dbAdapter, err := db.NewAdapter(conf.Db)
 	if err != nil {
-		log.Printf("main: cannot create database adaper %v", err)
+		log.Printf("main: cannot create database adaper %v\n", err)
 		return
 	}
 
 	err = dbAdapter.Connect(ctx, conf.Db.ConnStr)
 	if err != nil {
-		log.Printf("main: cannot connect to database %v", err)
+		log.Printf("main: cannot connect to database %v\n", err)
 		return
 	}
 	defer dbAdapter.Close(ctx)
@@ -69,7 +82,7 @@ func main() {
 		case m := <-msgChan:
 			err = dbAdapter.SaveMsg(ctx, []provider.Message{m})
 			if err != nil {
-				log.Printf("main: cannot save message in database: error: %v", err)
+				log.Printf("main: cannot save message in database: error: %v\n", err)
 				return
 			}
 		case <-ctx.Done():

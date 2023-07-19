@@ -3,7 +3,6 @@ package seishub
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path"
 	"seismo/provider"
@@ -28,7 +27,7 @@ func Test_ExtractMessages(t *testing.T) {
 func Test_findStartMsgNum(t *testing.T) {
 	inputDataDir := "testdata/json_msg/2022-February"
 
-	inputFiles, err := ioutil.ReadDir(inputDataDir)
+	inputFiles, err := os.ReadDir(inputDataDir)
 	if err != nil {
 		t.Fatalf("Cannot read input data directory content list: %s", inputDataDir)
 	}
@@ -36,8 +35,14 @@ func Test_findStartMsgNum(t *testing.T) {
 	msgs := make([]*provider.Message, 0, len(inputFiles))
 
 	for _, f := range inputFiles {
-		if f.IsDir() || f.Size() > maxInputSize {
-			t.Logf("Skiping. \"%s\" is a folder or too big.\n", f.Name())
+		inf, err := f.Info()
+		if err != nil {
+			t.Logf("Skiping. Cannot read info for %q\n", f.Name())
+			continue
+		}
+
+		if f.IsDir() || inf.Size() > maxInputSize {
+			t.Logf("Skiping. %q is a folder or too big.\n", f.Name())
 			continue
 		}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"seismo/provider"
@@ -152,13 +151,19 @@ func Test_ParseMsg(t *testing.T) {
 	inputDataDir := "testdata/html/2022-February"
 	wantDataDir := "testdata/json_msg/2022-February"
 
-	inputFiles, err := ioutil.ReadDir(inputDataDir)
+	inputFiles, err := os.ReadDir(inputDataDir)
 	if err != nil {
 		t.Fatalf("Cannot read input data directory content list: %s", inputDataDir)
 	}
 
 	for _, f := range inputFiles {
-		if f.IsDir() || f.Size() > maxInputSize {
+		inf, err := f.Info()
+		if err != nil {
+			t.Logf("Skiping. Cannot read info for %q\n", f.Name())
+			continue
+		}
+
+		if f.IsDir() || inf.Size() > maxInputSize {
 			t.Logf("Skiping. \"%s\" is a folder or too big.\n", f.Name())
 			continue
 		}

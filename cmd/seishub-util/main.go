@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -51,7 +50,7 @@ func main() {
 	}
 
 	if *baseAddrFlag == "" {
-		fmt.Printf("The value of the \"baseAddr\" flag is not specified. The default value \"%s\" will be used.\n", defBaseAddr)
+		fmt.Printf("The value of the \"baseAddr\" flag is not specified. The default value %q will be used.\n", defBaseAddr)
 		*baseAddrFlag = defBaseAddr
 	}
 
@@ -62,7 +61,7 @@ func main() {
 	}
 
 	if *outFlag == "" {
-		fmt.Printf("The value of the \"out\" flag is not specified.The default value \"%s\" will be used.\n", defOutDir)
+		fmt.Printf("The value of the \"out\" flag is not specified.The default value %q will be used.\n", defOutDir)
 		*outFlag = path.Join(path.Dir(ep), defOutDir)
 	}
 
@@ -100,7 +99,7 @@ func main() {
 }
 
 func parseMsgFiles(inputDir, saveDir string) error {
-	files, err := ioutil.ReadDir(inputDir)
+	files, err := os.ReadDir(inputDir)
 	if err != nil {
 		return err
 	}
@@ -111,20 +110,26 @@ func parseMsgFiles(inputDir, saveDir string) error {
 	}
 
 	for _, f := range files {
-		if f.IsDir() || f.Size() > maxInputSize {
-			log.Printf("Skiping. \"%s\" is a folder or too big.\n", f.Name())
+		inf, err := f.Info()
+		if err != nil {
+			log.Printf("Skiping. Cannot read info for %q\n", f.Name())
 			continue
 		}
 
-		bf, err := ioutil.ReadFile(path.Join(inputDir, f.Name()))
+		if f.IsDir() || inf.Size() > maxInputSize {
+			log.Printf("Skiping. %q is a folder or too big.\n", f.Name())
+			continue
+		}
+
+		bf, err := os.ReadFile(path.Join(inputDir, f.Name()))
 		if err != nil {
-			log.Printf("Skiping. Cannot read \"%s\": %v\n", f.Name(), err)
+			log.Printf("Skiping. Cannot read %q: %v\n", f.Name(), err)
 			continue
 		}
 
 		msg, err := seishub.ParseMsg(string(bf))
 		if err != nil {
-			log.Printf("Skiping. Cannot parse \"%s\": %v\n", f.Name(), err)
+			log.Printf("Skiping. Cannot parse %q: %v\n", f.Name(), err)
 			continue
 		}
 		//msg.Link = f.Name()
