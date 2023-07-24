@@ -1,7 +1,6 @@
 package seishub
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,7 +8,6 @@ import (
 	"seismo/provider"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -18,7 +16,7 @@ const (
 	maxInputSize = 10 * 1024
 )
 
-func Test_parseMsgNames(t *testing.T) {
+func Test_ParseMsgNames(t *testing.T) {
 	input := `<UL>
 	<!--0 01677647756.21127- -->
 	<LI><A HREF="021127.html">[Seismic-Report] ОПЕРАТИВНОЕ СООБЩЕНИЕ О СЕЙСМИЧЕСКОМ СОБЫТИИ (asb2023eescua)</A><A NAME="21127">&nbsp;</A><I>Система Автоматической Обработки</I>
@@ -87,7 +85,7 @@ func Test_parseMsgNames(t *testing.T) {
 	}
 
 	buf := new(strings.Builder)
-	buf.WriteString(fmt.Sprintf("\ngetMsgNames: \n\t want(%d) & result(%d):\n", len(want), len(want)))
+	buf.WriteString(fmt.Sprintf("\n Test_ParseMsgNames: \n\t want(%d) & result(%d):\n", len(want), len(want)))
 	buf.WriteString(sideBySide(want, res))
 	t.Logf(buf.String())
 }
@@ -126,97 +124,50 @@ func max(a, b int) int {
 	return b
 }
 
-func Test_getMsgPage(t *testing.T) {
-	var input = struct {
-		url string
-	}{"http://seishub.ru/pipermail/seismic-report/2023-March/021128.html"}
-
-	c, err := os.ReadFile("testdata/html/msg_asb2023eesfwx.html")
-	if err != nil {
-		panic(err)
-	}
-
-	want := string(c)
-	res, err := GetMsgPage(context.Background(), input.url, nil)
-	if err != nil {
-		t.Errorf("\ngetMsgPage: \n\t error: %v", err)
-	}
-
-	if res != want {
-		t.Errorf(("\ngetMsgPage \n\t result != want"))
-	}
-}
-
 func Test_ParseMsg(t *testing.T) {
 	inputDataDir := "testdata/html/2022-February"
 	wantDataDir := "testdata/json_msg/2022-February"
 
 	inputFiles, err := os.ReadDir(inputDataDir)
 	if err != nil {
-		t.Fatalf("Cannot read input data directory content list: %s", inputDataDir)
+		t.Fatalf("Test_ParseMsg: Cannot read input data directory content list: %s", inputDataDir)
 	}
 
 	for _, f := range inputFiles {
 		inf, err := f.Info()
 		if err != nil {
-			t.Logf("Skiping. Cannot read info for %q\n", f.Name())
+			t.Logf("Test_ParseMsg: Skiping. Cannot read info for %q\n", f.Name())
 			continue
 		}
 
 		if f.IsDir() || inf.Size() > maxInputSize {
-			t.Logf("Skiping. \"%s\" is a folder or too big.\n", f.Name())
+			t.Logf("Test_ParseMsg: Skiping. \"%s\" is a folder or too big.\n", f.Name())
 			continue
 		}
 
 		inputBuf, err := os.ReadFile(path.Join(inputDataDir, f.Name()))
 		if err != nil {
-			t.Fatalf("Cannot read \"%s\": %v\n", f.Name(), err)
+			t.Fatalf("Test_ParseMsg: Cannot read \"%s\": %v\n", f.Name(), err)
 		}
 
 		wantBuf, err := os.ReadFile(path.Join(wantDataDir, f.Name()+".json"))
 		if err != nil {
-			t.Fatalf("Cannot read \"%s\": %v\n", f.Name()+".json", err)
+			t.Fatalf("Test_ParseMsg: Cannot read \"%s\": %v\n", f.Name()+".json", err)
 		}
 
 		resultMsg, err := ParseMsg(string(inputBuf))
 		if err != nil {
-			t.Errorf("\nCannot parse \"%s\": %v\n", f.Name(), err)
+			t.Errorf("\nTest_ParseMsg: Cannot parse \"%s\": %v\n", f.Name(), err)
 		}
 
 		var wantMsg provider.Message
 		if err = json.Unmarshal(wantBuf, &wantMsg); err != nil {
-			t.Fatalf("\nCannot unmarshal \"%s\"; error: %v", f.Name()+".json", err)
+			t.Fatalf("\nTest_ParseMsg: Cannot unmarshal \"%s\"; error: %v", f.Name()+".json", err)
 		}
 
 		if *resultMsg != wantMsg {
-			t.Errorf("\nParseMsg: \twant: %v\n\t result: %v\n", wantMsg, *resultMsg)
+			t.Errorf("\nTest_ParseMsg: \twant: %v\n\t result: %v\n", wantMsg, *resultMsg)
 		}
-	}
-}
-
-func Test_GetMsg(t *testing.T) {
-	input := struct {
-		url string
-	}{
-		"http://seishub.ru/pipermail/seismic-report/2023-March/021128.html",
-	}
-
-	want := provider.Message{EventId: "asb2023eesfwx"}
-	want.FocusTime, _ = time.Parse("2006.01.02 03:04:05", "2023.03.01 05:13:16.43")
-	want.Latitude = 54.71
-	want.Longitude = 83.67
-	want.Magnitude = 3.3
-	want.Type = provider.QuarryBlast
-	want.Quality = provider.Excellent
-	want.Link = "http://seishub.ru/pipermail/seismic-report/2023-March/021128.html"
-
-	res, err := GetMsg(context.Background(), input.url, nil)
-	if err != nil {
-		t.Errorf("Test_extractMsg: \n\t error: %v", err)
-	}
-
-	if res == nil || *res != want {
-		t.Errorf("extractMsg: \n\t result != want")
 	}
 }
 

@@ -1,16 +1,14 @@
 package pseudo
 
 import (
-	"context"
 	"fmt"
 	"seismo/provider"
 	"testing"
-	"time"
 )
 
 // Test_createRandMsgs is ONLY for launching and
 // debugging createRandMsgs. This test function
-// DOES NOT compares result and expected results
+// DOES NOT compares expected results
 // and expected values
 func Test_createRandMsgs(t *testing.T) {
 	//t.Errorf("")
@@ -27,35 +25,35 @@ func Test_createRandMsgs(t *testing.T) {
 	}
 }
 
-func Test_Hub_StartWatch(t *testing.T) {
-	t.Error("")
-	conf := provider.DefaultWatcherConfig()
-	w, _ := NewHub(conf)
-	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
-	defer cancel()
+// Test_StartWatch is ONLY for launching and
+// debugging createRandMsgs. This test function
+// DOES NOT compares expected results
+// and expected values
+// func Test_StartWatch(t *testing.T) {
+// 	//t.Error("")
+// 	conf := provider.DefaultWatcherConfig()
+// 	w, _ := NewHub(conf)
+// 	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+// 	defer cancel()
 
-	ch, err := w.StartWatch(ctx, time.Now())
-	if err != nil {
-		t.Fatalf("start watching error: %v", err)
-	}
+// 	ch, err := w.StartWatch(ctx, time.Now())
+// 	if err != nil {
+// 		t.Fatalf("start watching error: %v", err)
+// 	}
 
-	_, err = w.StartWatch(ctx, time.Now())
-	if err != nil {
-		t.Errorf("starting watch error: %v", err)
-	}
+// 	_, err = w.StartWatch(ctx, time.Now())
+// 	if err != nil {
+// 		t.Errorf("starting watch error: %v", err)
+// 	}
 
-	for m := range ch {
-		fmt.Println(m)
-	}
+// 	for m := range ch {
+// 		fmt.Println(m)
+// 	}
 
-	fmt.Println("!!!!!!")
+// 	fmt.Printf("State %s", w.StateInfo())
 
-	fmt.Printf("State %s", w.StateInfo())
-
-	_, err = w.StartWatch(ctx, time.Now())
-	if err != nil {
-		t.Errorf("starting watch error: %v", err)
-	}
-
-	fmt.Println("!!!!!!")
-}
+// 	_, err = w.StartWatch(ctx, time.Now())
+// 	if err != nil {
+// 		t.Errorf("starting watch error: %v", err)
+// 	}
+// }

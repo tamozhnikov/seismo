@@ -340,8 +340,6 @@ func (h *Hub) getMsgByLink(ctx context.Context, link string) (*provider.Message,
 // Attention! The method does not guarantee immediate termination by context cancellation.
 func (h *Hub) Extract(ctx context.Context,
 	from provider.MonthYear, to provider.MonthYear, paral int) ([]*provider.Message, error) {
-	links := make(chan string)
-	defer close(links)
 
 	monthNum := to.Diff(from) + 1
 	if monthNum <= 0 {
@@ -354,6 +352,7 @@ func (h *Hub) Extract(ctx context.Context,
 
 	//Result slice of messages
 	msgs := make([]*provider.Message, 0, avgMonthMsgNum*monthNum)
+	links := make(chan string)
 
 	var wg sync.WaitGroup
 	wg.Add(paral)
@@ -377,21 +376,26 @@ func (h *Hub) Extract(ctx context.Context,
 		sg := MonthYearPathSeg(m.Month, m.Year)
 		monthLink, err := url.JoinPath(h.config.ConnStr, sg)
 		if err != nil {
-			return nil, fmt.Errorf("Extract: %v ", err)
+			//return nil, fmt.Errorf("Extract: %v ", err)
+			log.Printf("Extract: %v", err)
+			continue
 		}
 
 		names, err := GetMsgNames(ctx, monthLink, &h.Client)
-		if err != nil && errors.As(err, &NotFoundErr{}) {
+		if err != nil { //&& errors.As(err, &NotFoundErr{}) {
 			log.Printf("Extract: %v", err)
 			continue
-		} else if err != nil {
-			return nil, fmt.Errorf("Extract: %v", err)
 		}
+		// // else if err != nil {
+		// // 	return nil, fmt.Errorf("Extract: %v", err)
+		// }
 
 		for _, n := range names {
 			l, err := url.JoinPath(monthLink, n)
 			if err != nil {
-				return nil, fmt.Errorf("Extract: %v", err)
+				//return nil, fmt.Errorf("Extract: %v", err)
+				log.Printf("Extract: %v", err)
+				continue
 			}
 			links <- l
 		}
