@@ -65,7 +65,9 @@ func (a *Adapter) SaveMsg(ctx context.Context, msgs []provider.Message) error {
 	return nil
 }
 
-// GetLastTime returns the focus time of the last saved message for specified "sourceId".
+// GetLastTime returns the focus time of the last saved message for a specified "sourceId" and error.
+// If there are no messages for the specified source, the method returns zero-value time.
+// If the returned error is not nil, the returned time value is the zero-value.
 func (a *Adapter) GetLastTime(ctx context.Context, sourceId string) (time.Time, error) {
 	coll := a.client.Database(a.dbName).Collection(msgCollName)
 
