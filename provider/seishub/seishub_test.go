@@ -176,18 +176,18 @@ func Test_monthYearPathSeg(t *testing.T) {
 		input provider.MonthYear
 		want  string
 	}{
-		{provider.MonthYear{1, 2022}, "2022-January"},
-		{provider.MonthYear{2, 2022}, "2022-February"},
-		{provider.MonthYear{3, 2022}, "2022-March"},
-		{provider.MonthYear{4, 2022}, "2022-April"},
-		{provider.MonthYear{5, 2022}, "2022-May"},
-		{provider.MonthYear{6, 2022}, "2022-June"},
-		{provider.MonthYear{7, 2022}, "2022-July"},
-		{provider.MonthYear{8, 2022}, "2022-August"},
-		{provider.MonthYear{9, 2022}, "2022-September"},
-		{provider.MonthYear{10, 2022}, "2022-October"},
-		{provider.MonthYear{11, 2022}, "2022-November"},
-		{provider.MonthYear{12, 2022}, "2022-December"},
+		{provider.MonthYear{Month: 1, Year: 2022}, "2022-January"},
+		{provider.MonthYear{Month: 2, Year: 2022}, "2022-February"},
+		{provider.MonthYear{Month: 3, Year: 2022}, "2022-March"},
+		{provider.MonthYear{Month: 4, Year: 2022}, "2022-April"},
+		{provider.MonthYear{Month: 5, Year: 2022}, "2022-May"},
+		{provider.MonthYear{Month: 6, Year: 2022}, "2022-June"},
+		{provider.MonthYear{Month: 7, Year: 2022}, "2022-July"},
+		{provider.MonthYear{Month: 8, Year: 2022}, "2022-August"},
+		{provider.MonthYear{Month: 9, Year: 2022}, "2022-September"},
+		{provider.MonthYear{Month: 10, Year: 2022}, "2022-October"},
+		{provider.MonthYear{Month: 11, Year: 2022}, "2022-November"},
+		{provider.MonthYear{Month: 12, Year: 2022}, "2022-December"},
 	}
 
 	for _, test := range tests {
