@@ -1,0 +1,1 @@
+{"watchers":{"seishub":{"id":"seishub","t":"seishub","conn_str":"http://seishub.ru/pipermail/seismic-report/","timeout":120,"check_period":2}}, "db":{"T":"MongoDb","ConnStr":"mongodb://localhost:27017/collectorDb"},"maintain_period":1}

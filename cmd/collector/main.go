@@ -16,15 +16,16 @@ func main() {
 	log.SetPrefix("Collector: ")
 	log.Println("main: starting")
 
-	confFileName := *flag.String("confFile", "", "config file full name")
+	confFileName := flag.String("confFile", "", "config file full name")
 	flag.Parse()
 
 	var err error
-	if confFileName == "" {
-		log.Println("Config file name is not specifies, try to get it from an environment variable...")
-		confFileName, err = collector.ConfigFileNameFromEnv()
+	if *confFileName == "" {
+		log.Println("Config file name is not specified, trying to get it from an environment variable...")
+		*confFileName, err = collector.ConfigFileNameFromEnv()
 		if err != nil {
 			log.Printf("main: cannot get config file name: error: %v\n", err)
+			return
 		}
 	}
 
@@ -33,7 +34,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	conf, err := collector.ConfigFromFile(confFileName) //collector.ConfigFromFile("collector/testdata/double_mongo_conf.json") //DefaultConfig()
+	conf, err := collector.ConfigFromFile(*confFileName) //collector.ConfigFromFile("collector/testdata/double_mongo_conf.json") //DefaultConfig()
 	if err != nil {
 		log.Printf("main: cannot read config file: %v\n", err)
 		return

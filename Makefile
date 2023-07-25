@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := collector #shu
 
-OUT = ./bin
+BIN = ./bin
 CMD = ./cmd
 PKG = .
 
@@ -11,8 +11,11 @@ TEST_FLG = #-tags outtest
 #############
 # Collector #
 #############
+collector-run:
+.PHONY: collector-run
+
 collector: provider collector-fmt collector-vet collector-test
-	go build -o $(OUT)/collector/collector $(CMD)/collector/main.go 
+	go build -o $(BIN)/collector/collector $(CMD)/collector/main.go 
 .PHONY: collector
 
 collector-fmt: 
@@ -54,7 +57,7 @@ provider-test:
 # seishub-util #
 ################
 shu: seishub shu-fmt shu-vet shu-test
-	go build -o $(OUT)/seishub-util/shu $(CMD)/seishub-util/main.go
+	go build -o $(BIN)/seishub-util/shu $(CMD)/seishub-util/main.go
 .PHONY: shu
 
 shu-fmt: 

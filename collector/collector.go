@@ -63,6 +63,7 @@ func RestartWatchers(ctx context.Context, watchers map[string]provider.Watcher,
 		//if a returned last time has the 0 value, watching start time is now
 		var t0 time.Time
 		if t == t0 {
+			log.Println("RestartWatchers: the returned last time has the 0 value, watching start time is now")
 			t = time.Now().UTC()
 		}
 
